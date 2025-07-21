@@ -1,5 +1,5 @@
 // libraries
-import { type FC } from "react";
+import { type FC } from 'react';
 
 const Partners: FC = () => {
   return (

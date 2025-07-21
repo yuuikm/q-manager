@@ -14,6 +14,7 @@
     "src/pages",
     "src/store",
     "src/components",
+    "src/constants",
     "src/styles",
     "src/custom.d.ts"
   ],

@@ -1,5 +1,5 @@
 // libraries
-import { type FC } from "react";
+import { type FC } from 'react';
 
 const Services: FC = () => {
   return (
@@ -10,12 +10,9 @@ const Services: FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-gray-50 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300">
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4 text-blue-600">
-                Q-manager Обучение
-              </h3>
+              <h3 className="text-xl font-bold mb-4 text-blue-600">Q-manager Обучение</h3>
               <p className="text-gray-700 mb-4">
-                Дистанционное / Офлайн / Онлайн обучение по стандартам
-                менеджмента качества
+                Дистанционное / Офлайн / Онлайн обучение по стандартам менеджмента качества
               </p>
               <a href="#" className="text-blue-600 hover:underline font-medium">
                 Подробнее
@@ -25,12 +22,9 @@ const Services: FC = () => {
 
           <div className="bg-gray-50 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300">
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4 text-blue-600">
-                Q-manager Консультации
-              </h3>
+              <h3 className="text-xl font-bold mb-4 text-blue-600">Q-manager Консультации</h3>
               <p className="text-gray-700 mb-4">
-                Информационно-консультативные услуги по внедрению систем
-                менеджмента
+                Информационно-консультативные услуги по внедрению систем менеджмента
               </p>
               <a href="#" className="text-blue-600 hover:underline font-medium">
                 Подробнее
@@ -40,12 +34,9 @@ const Services: FC = () => {
 
           <div className="bg-gray-50 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300">
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4 text-blue-600">
-                Q-manager Документация
-              </h3>
+              <h3 className="text-xl font-bold mb-4 text-blue-600">Q-manager Документация</h3>
               <p className="text-gray-700 mb-4">
-                Платная документация по различным стандартам менеджмента
-                качества
+                Платная документация по различным стандартам менеджмента качества
               </p>
               <a href="#" className="text-blue-600 hover:underline font-medium">
                 Подробнее

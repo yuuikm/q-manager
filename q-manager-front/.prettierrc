@@ -10,6 +10,7 @@
     "^api/(.*)$",
     "^pages/(.*)$",
     "^components/(.*)$",
+    "^constants/(.*)$",
     "^store/(.*)$",
     "^assets/(.*)$",
     "^styles/(.*)$",
