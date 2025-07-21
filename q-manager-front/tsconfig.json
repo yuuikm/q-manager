@@ -9,12 +9,29 @@
     }
   ],
   "include": [
+    "src/api",
+    "src/assets",
+    "src/pages",
+    "src/store",
     "src/components",
+    "src/styles",
     "src/custom.d.ts"
   ],
   "compilerOptions": {
     "baseUrl": "src",
     "paths": {
+      "api/*": [
+        "api/*"
+      ],
+      "assets/*": [
+        "assets/*"
+      ],
+      "pages/*": [
+        "pages/*"
+      ],
+      "store/*": [
+        "store/*"
+      ],
       "components/*": [
         "components/*"
       ],
