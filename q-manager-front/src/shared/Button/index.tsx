@@ -1,4 +1,5 @@
 import { type FC } from 'react';
+import { Link } from 'react-router-dom';
 
 type ButtonProps = {
   link?: string;
@@ -19,7 +20,8 @@ const Button: FC<ButtonProps> = ({ link, text, type, onClick }) => {
       typeStyles = 'bg-gray-100 hover:bg-gray-200 text-gray-800';
       break;
     case 'outline':
-      typeStyles = 'bg-transparent border-2 border-white hover:bg-white hover:text-gray-900 text-white';
+      typeStyles =
+        'bg-transparent border-2 border-white hover:bg-white hover:text-gray-900 text-white';
       break;
   }
 
@@ -27,16 +29,16 @@ const Button: FC<ButtonProps> = ({ link, text, type, onClick }) => {
 
   if (link) {
     return (
-        <a href={link} className={className}>
-          {text}
-        </a>
+      <Link to={link} className={className}>
+        {text}
+      </Link>
     );
   }
 
   return (
-      <button onClick={onClick} className={className}>
-        {text}
-      </button>
+    <button onClick={onClick} className={className}>
+      {text}
+    </button>
   );
 };
 
