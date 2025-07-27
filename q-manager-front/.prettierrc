@@ -9,7 +9,7 @@
     "<THIRD_PARTY_MODULES>",
     "^api/(.*)$",
     "^pages/(.*)$",
-    "^components/(.*)$",
+    "^shared/(.*)$",
     "^constants/(.*)$",
     "^store/(.*)$",
     "^assets/(.*)$",

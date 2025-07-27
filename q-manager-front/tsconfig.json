@@ -13,7 +13,7 @@
     "src/assets",
     "src/pages",
     "src/store",
-    "src/components",
+    "src/shared",
     "src/constants",
     "src/styles",
     "src/custom.d.ts"
