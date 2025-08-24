@@ -22,6 +22,6 @@ function Home() {
       <About />
     </>
   );
-}
+};
 
 export default Home;

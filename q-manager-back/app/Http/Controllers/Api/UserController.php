@@ -9,9 +9,21 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    /**
+     * Display a listing of users
+     */
+    public function index()
+    {
+        return User::all();
+    }
+
+    /**
+     * Store a newly created user
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'username' => 'required|string|max:255|unique:users,username',
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
             'email'      => 'required|email|unique:users,email',
@@ -21,14 +33,20 @@ class UserController extends Controller
 
         $validated['password'] = Hash::make($validated['password']);
 
-        return User::create($validated);
+        $user = User::create($validated);
+
+        return response()->json($user, 201);
     }
 
+    /**
+     * Update the specified user
+     */
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
+            'username' => 'sometimes|required|string|max:255|unique:users,username,' . $id,
             'first_name' => 'sometimes|required|string|max:255',
             'last_name'  => 'sometimes|required|string|max:255',
             'email'      => 'sometimes|required|email|unique:users,email,' . $id,
@@ -42,7 +60,17 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        return $user;
+        return response()->json($user);
     }
 
+    /**
+     * Remove the specified user
+     */
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return response()->json(['message' => 'User deleted successfully']);
+    }
 }

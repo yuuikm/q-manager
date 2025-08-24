@@ -1,69 +1,173 @@
-# React + TypeScript + Vite
+# Q-Manager Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React TypeScript application for queue management with authentication system.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🔐 **Authentication System**: Complete login/register functionality with JWT tokens
+- 🎨 **Modern UI**: Beautiful, responsive design with Tailwind CSS
+- 📱 **Mobile Responsive**: Works perfectly on all devices
+- 🔄 **State Management**: React Context for authentication state
+- 🛡️ **Form Validation**: Yup validation with error handling
+- 🚀 **TypeScript**: Full type safety throughout the application
 
-## Expanding the ESLint configuration
+## Authentication System
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The application includes a complete authentication system with the following features:
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Frontend Components
+- **Login Page**: User login with email and password
+- **Register Page**: User registration with username, email, and password
+- **AuthContext**: Global state management for authentication
+- **Protected Routes**: Automatic redirection for authenticated users
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### API Integration
+- **API Service**: Centralized API calls with error handling
+- **Token Management**: Automatic token storage and retrieval
+- **CORS Support**: Cross-origin request handling
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Backend Integration
+- **Laravel API**: RESTful API endpoints for authentication
+- **Token Authentication**: Custom token-based authentication
+- **Database Storage**: Secure token storage with expiration
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/user` - Get current user
+
+### Users
+- `GET /api/users` - Get all users
+- `POST /api/users` - Create user
+- `PUT /api/users/{id}` - Update user
+- `DELETE /api/users/{id}` - Delete user
+
+## Project Structure
+
+```
+src/
+├── api/                    # API services
+│   ├── auth.ts            # Authentication API
+│   └── index.ts           # API exports
+├── constants/              # Application constants
+│   ├── endpoints.ts       # API endpoints
+│   └── links.ts           # Route links
+├── pages/                  # Page components
+│   ├── Login/             # Login page
+│   ├── Register/          # Register page
+│   └── Home/              # Home page
+├── shared/                 # Shared components
+│   └── FormWrapper/       # Form wrapper component
+├── store/                  # State management
+│   └── AuthContext.tsx    # Authentication context
+└── styles/                 # Global styles
+    └── index.css          # Tailwind CSS
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
+- Backend API running on `http://localhost:8000`
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Installation
+
+1. Install dependencies:
+```bash
+npm install
 ```
+
+2. Start the development server:
+```bash
+npm run dev
+```
+
+3. Open your browser and navigate to `http://localhost:5173`
+
+### Backend Setup
+
+Make sure the Laravel backend is running and the database is migrated:
+
+```bash
+cd q-manager-back
+php artisan migrate
+php artisan serve
+```
+
+## Usage
+
+### Authentication Flow
+
+1. **Registration**: Users can create new accounts with username, email, and password
+2. **Login**: Users can log in with email and password
+3. **Token Storage**: Authentication tokens are automatically stored in localStorage
+4. **Protected Routes**: Authenticated users are redirected to the home page
+5. **Logout**: Users can log out, which clears the token and redirects to login
+
+### Form Validation
+
+The application uses Yup for form validation with the following rules:
+
+#### Login Form
+- Email: Required, valid email format
+- Password: Required, minimum 6 characters
+
+#### Register Form
+- Username: Required, 3-20 characters, alphanumeric + underscore
+- Email: Required, valid email format, unique
+- Password: Required, minimum 6 characters, must contain uppercase, lowercase, and number
+
+## Styling
+
+The application uses Tailwind CSS for styling with:
+- Responsive design
+- Modern gradient backgrounds
+- Smooth transitions and animations
+- Consistent color scheme
+- Professional form styling
+
+## Error Handling
+
+- **API Errors**: Proper error messages displayed to users
+- **Validation Errors**: Field-specific error messages
+- **Network Errors**: Graceful handling of connection issues
+- **Token Expiration**: Automatic logout on token expiration
+
+## Security Features
+
+- **Password Hashing**: Passwords are hashed on the backend
+- **Token Authentication**: Secure token-based authentication
+- **CORS Protection**: Proper CORS configuration
+- **Input Validation**: Server-side and client-side validation
+- **XSS Protection**: Sanitized user inputs
+
+## Development
+
+### Adding New API Endpoints
+
+1. Add the endpoint to `src/constants/endpoints.ts`
+2. Create the API function in the appropriate service file
+3. Export from `src/api/index.ts`
+4. Use in your components
+
+### Adding New Protected Routes
+
+1. Create the component
+2. Add the route to `src/pages/App.tsx`
+3. Use the `useAuth` hook to check authentication status
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
