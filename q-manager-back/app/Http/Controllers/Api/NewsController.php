@@ -1,0 +1,226 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\News;
+use App\Models\NewsComment;
+use App\Models\NewsLike;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+
+class NewsController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $query = News::with(['author', 'comments', 'likes']);
+
+        // Filter by published status
+        if ($request->has('published')) {
+            $query->where('is_published', $request->boolean('published'));
+        }
+
+        // Filter by featured status
+        if ($request->has('featured')) {
+            $query->where('is_featured', $request->boolean('featured'));
+        }
+
+        // Search by title or description
+        if ($request->has('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $news = $query->orderBy('created_at', 'desc')->paginate(15);
+        return response()->json($news);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'content' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_published' => 'boolean',
+            'is_featured' => 'boolean',
+            'published_at' => 'nullable|date',
+        ]);
+
+        $data = [
+            'title' => $request->title,
+            'slug' => Str::slug($request->title),
+            'description' => $request->description,
+            'content' => $request->content,
+            'is_published' => $request->is_published ?? false,
+            'is_featured' => $request->is_featured ?? false,
+            'published_at' => $request->published_at,
+            'created_by' => auth()->id(),
+        ];
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $request->file('image')->store('news/images', 'public');
+        }
+
+        if ($request->hasFile('featured_image')) {
+            $data['featured_image'] = $request->file('featured_image')->store('news/featured', 'public');
+        }
+
+        $news = News::create($data);
+        $news->load(['author', 'comments', 'likes']);
+
+        return response()->json($news, 201);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        $news = News::with(['author', 'comments.user', 'likes'])->findOrFail($id);
+        
+        // Increment view count
+        $news->increment('views_count');
+        
+        return response()->json($news);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        $news = News::findOrFail($id);
+
+        $request->validate([
+            'title' => ['required', 'string', 'max:255', Rule::unique('news', 'title')->ignore($news->id)],
+            'description' => 'required|string',
+            'content' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_published' => 'boolean',
+            'is_featured' => 'boolean',
+            'published_at' => 'nullable|date',
+        ]);
+
+        $data = [
+            'title' => $request->title,
+            'slug' => Str::slug($request->title),
+            'description' => $request->description,
+            'content' => $request->content,
+            'is_published' => $request->is_published ?? $news->is_published,
+            'is_featured' => $request->is_featured ?? $news->is_featured,
+            'published_at' => $request->published_at ?? $news->published_at,
+        ];
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image
+            if ($news->image_path) {
+                Storage::disk('public')->delete($news->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('news/images', 'public');
+        }
+
+        if ($request->hasFile('featured_image')) {
+            // Delete old featured image
+            if ($news->featured_image) {
+                Storage::disk('public')->delete($news->featured_image);
+            }
+            $data['featured_image'] = $request->file('featured_image')->store('news/featured', 'public');
+        }
+
+        $news->update($data);
+        $news->load(['author', 'comments', 'likes']);
+
+        return response()->json($news);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $news = News::findOrFail($id);
+
+        // Delete associated images
+        if ($news->image_path) {
+            Storage::disk('public')->delete($news->image_path);
+        }
+        if ($news->featured_image) {
+            Storage::disk('public')->delete($news->featured_image);
+        }
+
+        $news->delete();
+        return response()->json(['message' => 'News deleted successfully']);
+    }
+
+    /**
+     * Toggle like for news
+     */
+    public function toggleLike(Request $request, string $id)
+    {
+        $news = News::findOrFail($id);
+        $user = auth()->user();
+
+        $like = NewsLike::where('news_id', $news->id)
+                       ->where('user_id', $user->id)
+                       ->first();
+
+        if ($like) {
+            $like->delete();
+            $news->decrement('likes_count');
+            $liked = false;
+        } else {
+            NewsLike::create([
+                'news_id' => $news->id,
+                'user_id' => $user->id,
+            ]);
+            $news->increment('likes_count');
+            $liked = true;
+        }
+
+        return response()->json([
+            'liked' => $liked,
+            'likes_count' => $news->fresh()->likes_count
+        ]);
+    }
+
+    /**
+     * Add comment to news
+     */
+    public function addComment(Request $request, string $id)
+    {
+        $request->validate([
+            'content' => 'required|string|max:1000',
+            'parent_id' => 'nullable|exists:news_comments,id',
+        ]);
+
+        $news = News::findOrFail($id);
+
+        $comment = NewsComment::create([
+            'news_id' => $news->id,
+            'user_id' => auth()->id(),
+            'content' => $request->content,
+            'parent_id' => $request->parent_id,
+        ]);
+
+        $news->increment('comments_count');
+        $comment->load('user');
+
+        return response()->json($comment, 201);
+    }
+}

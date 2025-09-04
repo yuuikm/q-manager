@@ -6,6 +6,10 @@ import Login from 'pages/Login';
 import Dashboard from 'pages/Dashboard';
 import DocumentUpload from 'pages/DocumentUpload';
 import DocumentList from 'pages/DocumentList';
+
+import News from 'pages/News';
+import Courses from 'pages/Courses';
+import Tests from 'pages/Tests';
 import Layout from 'components/Layout';
 
 function App() {
@@ -55,7 +59,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
+
           <Route path="/documents" element={<DocumentList />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/tests" element={<Tests />} />
           <Route path="/upload" element={<DocumentUpload />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

@@ -15,7 +15,10 @@ export interface RegisterData {
 export interface User {
   id: number;
   username: string;
+  first_name: string;
+  last_name: string;
   email: string;
+  phone: string;
   role: 'admin' | 'subscriber';
   created_at: string;
   updated_at: string;
@@ -33,7 +36,7 @@ export interface ApiError {
 
 export const authAPI = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch(AUTH_ENDPOINTS.LOGIN, {
+    const response = await fetch('http://localhost:8000/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +53,7 @@ export const authAPI = {
   },
 
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await fetch(AUTH_ENDPOINTS.REGISTER, {
+    const response = await fetch('http://localhost:8000/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -70,7 +73,7 @@ export const authAPI = {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
 
-    const response = await fetch(AUTH_ENDPOINTS.LOGOUT, {
+    const response = await fetch('http://localhost:8000/api/auth/logout', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -89,7 +92,7 @@ export const authAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch(AUTH_ENDPOINTS.USER, {
+    const response = await fetch('http://localhost:8000/api/auth/user', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

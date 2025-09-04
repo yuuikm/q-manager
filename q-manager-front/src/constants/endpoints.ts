@@ -13,7 +13,16 @@ export const USER_ENDPOINTS = {
   UPDATE: `${API_BASE_URL}/users/update`,
 } as const;
 
+export const DOCUMENT_ENDPOINTS = {
+  GET_DOCUMENTS: `${API_BASE_URL}/documents`,
+  GET_DOCUMENT: `${API_BASE_URL}/documents`,
+  GET_CATEGORIES: `${API_BASE_URL}/categories`,
+  DOWNLOAD_DOCUMENT: `${API_BASE_URL}/documents`,
+  PREVIEW_DOCUMENT: `${API_BASE_URL}/documents`,
+} as const;
+
 export const API_ENDPOINTS = {
   PING: `${API_BASE_URL}/ping`,
   USERS: `${API_BASE_URL}/users`,
+  ...DOCUMENT_ENDPOINTS,
 } as const;

@@ -68,7 +68,7 @@ class AuthController extends Controller
         $token = $request->bearerToken();
         
         if ($token) {
-            \App\Models\PersonalAccessToken::where('token', $token)->delete();
+            \App\Models\PersonalAccessToken::where('token', hash('sha256', $token))->delete();
         }
 
         return response()->json(['message' => 'Logged out successfully']);

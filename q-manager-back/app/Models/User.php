@@ -11,7 +11,10 @@ class User extends Authenticatable
 
     protected $fillable = [
         'username',
+        'first_name',
+        'last_name',
         'email',
+        'phone',
         'password',
         'role',
     ];
@@ -49,7 +52,7 @@ class User extends Authenticatable
             'tokenable_type' => User::class,
             'tokenable_id' => $this->id,
             'name' => 'auth_token',
-            'token' => $token,
+            'token' => hash('sha256', $token),
             'abilities' => ['*'],
             'last_used_at' => now(),
             'expires_at' => now()->addDays(30),

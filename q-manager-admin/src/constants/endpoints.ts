@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://127.0.0.1:8000/api';
+export const API_BASE_URL = 'http://localhost:8000/api';
 
 export const AUTH_ENDPOINTS = {
   LOGIN: `${API_BASE_URL}/auth/login`,
@@ -8,12 +8,16 @@ export const AUTH_ENDPOINTS = {
 };
 
 export const ADMIN_ENDPOINTS = {
-  UPLOAD_DOCUMENT: `${API_BASE_URL}/admin/documents/upload`,
+  UPLOAD_DOCUMENT: `${API_BASE_URL}/admin/documents`,
   GET_DOCUMENTS: `${API_BASE_URL}/admin/documents`,
   GET_DOCUMENT: `${API_BASE_URL}/admin/documents`,
   UPDATE_DOCUMENT: `${API_BASE_URL}/admin/documents`,
   DELETE_DOCUMENT: `${API_BASE_URL}/admin/documents`,
   GET_CATEGORIES: `${API_BASE_URL}/admin/categories`,
+  CATEGORIES: `${API_BASE_URL}/admin/categories`,
+  NEWS: `${API_BASE_URL}/admin/news`,
+  COURSES: `${API_BASE_URL}/admin/courses`,
+  TESTS: `${API_BASE_URL}/admin/tests`,
 };
 
 export const API_ENDPOINTS = {

@@ -7,6 +7,7 @@ import LearningFormats from "pages/Home/LearningFormats";
 import Partners from "pages/Home/Partners";
 import Faq from "pages/Home/Faq";
 import About from "pages/Home/About";
+import Documents from "pages/Home/Documents";
 
 function Home() {
   return (
@@ -16,6 +17,7 @@ function Home() {
       <Trainings />
       <Testimonials />
       <Courses />
+      <Documents />
       <LearningFormats />
       <Partners />
       <Faq />

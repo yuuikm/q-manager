@@ -17,17 +17,30 @@ class Document extends Model
         'file_size',
         'is_active',
         'created_by',
+        'user_id',
+        'buy_number',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'is_active' => 'boolean',
         'file_size' => 'integer',
+        'buy_number' => 'integer',
     ];
 
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function buyer()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(DocumentCategory::class, 'document_category_id');
     }
 
     public function scopeActive($query)
@@ -38,5 +51,10 @@ class Document extends Model
     public function scopeByCategory($query, $category)
     {
         return $query->where('category', $category);
+    }
+
+    public function scopeByUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
     }
 }

@@ -52,7 +52,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch(ADMIN_ENDPOINTS.UPLOAD_DOCUMENT, {
+    const response = await fetch('http://localhost:8000/api/admin/documents', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -74,7 +74,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const url = new URL(ADMIN_ENDPOINTS.GET_DOCUMENTS);
+    const url = new URL('http://localhost:8000/api/admin/documents');
     if (params?.page) url.searchParams.append('page', params.page.toString());
     if (params?.category) url.searchParams.append('category', params.category);
     if (params?.search) url.searchParams.append('search', params.search);
@@ -99,7 +99,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch(`${ADMIN_ENDPOINTS.GET_DOCUMENT}/${id}`, {
+    const response = await fetch(`http://localhost:8000/api/admin/documents/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch(`${ADMIN_ENDPOINTS.UPDATE_DOCUMENT}/${id}`, {
+    const response = await fetch(`http://localhost:8000/api/admin/documents/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -142,7 +142,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch(`${ADMIN_ENDPOINTS.DELETE_DOCUMENT}/${id}`, {
+    const response = await fetch(`http://localhost:8000/api/admin/documents/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -163,7 +163,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch(ADMIN_ENDPOINTS.GET_CATEGORIES, {
+    const response = await fetch('http://localhost:8000/api/admin/categories', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

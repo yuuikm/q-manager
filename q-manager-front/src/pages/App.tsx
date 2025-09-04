@@ -4,6 +4,8 @@ import { links } from 'constants/links';
 import Login from 'pages/Login';
 import Register from 'pages/Register';
 import Profile from 'pages/Profile';
+import Documents from 'pages/Documents';
+import DocumentDetail from 'pages/DocumentDetail';
 
 function App() {
   return (
@@ -12,6 +14,9 @@ function App() {
       <Route path={links.login} element={<Login />} />
       <Route path={links.register} element={<Register />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path={links.documents} element={<Documents />} />
+      <Route path="/documents/:category" element={<Documents />} />
+      <Route path="/document/:id" element={<DocumentDetail />} />
     </Routes>
   );
 }
