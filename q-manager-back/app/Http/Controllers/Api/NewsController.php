@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\News;
 use App\Models\NewsComment;
 use App\Models\NewsLike;
+use App\Models\NewsCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,7 @@ class NewsController extends Controller
      */
     public function index(Request $request)
     {
-        $query = News::with(['author', 'comments', 'likes']);
+        $query = News::with(['author', 'comments', 'likes', 'category']);
 
         // Filter by published status
         if ($request->has('published')) {
@@ -28,6 +29,13 @@ class NewsController extends Controller
         // Filter by featured status
         if ($request->has('featured')) {
             $query->where('is_featured', $request->boolean('featured'));
+        }
+
+        // Filter by category
+        if ($request->has('category')) {
+            $query->whereHas('category', function($q) use ($request) {
+                $q->where('name', $request->get('category'));
+            });
         }
 
         // Search by title or description
@@ -52,6 +60,7 @@ class NewsController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'content' => 'required|string',
+            'category' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_published' => 'boolean',
@@ -79,8 +88,25 @@ class NewsController extends Controller
             $data['featured_image'] = $request->file('featured_image')->store('news/featured', 'public');
         }
 
+        // Handle category if provided
+        if ($request->has('category') && $request->category) {
+            $categoryName = $request->category;
+            $category = NewsCategory::where('name', $categoryName)->first();
+            
+            if (!$category) {
+                // Create new category
+                $category = NewsCategory::create([
+                    'name' => $categoryName,
+                    'slug' => Str::slug($categoryName),
+                ]);
+            }
+
+            $data['category_id'] = $category->id;
+        }
+
         $news = News::create($data);
-        $news->load(['author', 'comments', 'likes']);
+
+        $news->load(['author', 'comments', 'likes', 'category']);
 
         return response()->json($news, 201);
     }
@@ -90,7 +116,7 @@ class NewsController extends Controller
      */
     public function show(string $id)
     {
-        $news = News::with(['author', 'comments.user', 'likes'])->findOrFail($id);
+        $news = News::with(['author', 'comments.user', 'likes', 'categories'])->findOrFail($id);
         
         // Increment view count
         $news->increment('views_count');
@@ -109,6 +135,7 @@ class NewsController extends Controller
             'title' => ['required', 'string', 'max:255', Rule::unique('news', 'title')->ignore($news->id)],
             'description' => 'required|string',
             'content' => 'required|string',
+            'category' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_published' => 'boolean',
@@ -143,8 +170,30 @@ class NewsController extends Controller
             $data['featured_image'] = $request->file('featured_image')->store('news/featured', 'public');
         }
 
+        // Handle category if provided
+        if ($request->has('category')) {
+            if ($request->category) {
+                $categoryName = $request->category;
+                $category = NewsCategory::where('name', $categoryName)->first();
+                
+                if (!$category) {
+                    // Create new category
+                    $category = NewsCategory::create([
+                        'name' => $categoryName,
+                        'slug' => Str::slug($categoryName),
+                    ]);
+                }
+
+                $data['category_id'] = $category->id;
+            } else {
+                // Remove category if empty
+                $data['category_id'] = null;
+            }
+        }
+
         $news->update($data);
-        $news->load(['author', 'comments', 'likes']);
+
+        $news->load(['author', 'comments', 'likes', 'category']);
 
         return response()->json($news);
     }
@@ -164,6 +213,7 @@ class NewsController extends Controller
             Storage::disk('public')->delete($news->featured_image);
         }
 
+        // Delete the news (this will also delete pivot table entries due to cascade)
         $news->delete();
         return response()->json(['message' => 'News deleted successfully']);
     }
@@ -206,21 +256,22 @@ class NewsController extends Controller
     {
         $request->validate([
             'content' => 'required|string|max:1000',
-            'parent_id' => 'nullable|exists:news_comments,id',
         ]);
 
         $news = News::findOrFail($id);
+        $user = auth()->user();
 
         $comment = NewsComment::create([
             'news_id' => $news->id,
-            'user_id' => auth()->id(),
+            'user_id' => $user->id,
             'content' => $request->content,
-            'parent_id' => $request->parent_id,
         ]);
 
         $news->increment('comments_count');
-        $comment->load('user');
 
-        return response()->json($comment, 201);
+        return response()->json([
+            'message' => 'Comment added successfully',
+            'comment' => $comment->load('user')
+        ], 201);
     }
 }

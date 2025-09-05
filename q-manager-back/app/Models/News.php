@@ -23,6 +23,7 @@ class News extends Model
         'likes_count',
         'comments_count',
         'created_by',
+        'category_id',
     ];
 
     protected $casts = [
@@ -42,7 +43,7 @@ class News extends Model
 
     public function category()
     {
-        return $this->belongsTo(NewsCategory::class, 'news_category_id');
+        return $this->belongsTo(NewsCategory::class);
     }
 
     public function comments()
@@ -64,5 +65,12 @@ class News extends Model
     public function scopeFeatured($query)
     {
         return $query->where('is_featured', true);
+    }
+
+    public function scopeByCategory($query, $category)
+    {
+        return $query->whereHas('category', function ($q) use ($category) {
+            $q->where('name', $category);
+        });
     }
 }

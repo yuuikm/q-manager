@@ -15,7 +15,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::orderBy('sort_order')->orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
         return response()->json($categories);
     }
 
@@ -26,21 +26,11 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:categories,name',
-            'description' => 'nullable|string',
-            'color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
-            'icon' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
         ]);
 
         $category = Category::create([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'color' => $request->color ?? '#667eea',
-            'icon' => $request->icon,
-            'is_active' => $request->is_active ?? true,
-            'sort_order' => $request->sort_order ?? 0,
         ]);
 
         return response()->json($category, 201);
@@ -64,21 +54,11 @@ class CategoryController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('categories', 'name')->ignore($category->id)],
-            'description' => 'nullable|string',
-            'color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
-            'icon' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
         ]);
 
         $category->update([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'color' => $request->color ?? $category->color,
-            'icon' => $request->icon,
-            'is_active' => $request->is_active ?? $category->is_active,
-            'sort_order' => $request->sort_order ?? $category->sort_order,
         ]);
 
         return response()->json($category);
@@ -91,10 +71,10 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
         
-        // Check if category is being used by documents or courses
-        if ($category->documents()->count() > 0 || $category->courses()->count() > 0) {
+        // Check if category is being used by documents, courses, or news
+        if ($category->documents()->count() > 0 || $category->courses()->count() > 0 || $category->news()->count() > 0) {
             return response()->json([
-                'message' => 'Cannot delete category that is being used by documents or courses.'
+                'message' => 'Cannot delete category that is being used by documents, courses, or news.'
             ], 422);
         }
 

@@ -184,7 +184,7 @@ const Tests = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this test?')) return;
+    if (!confirm('Вы уверены, что хотите удалить этот тест?')) return;
 
     try {
       const token = localStorage.getItem('auth_token');
@@ -199,10 +199,33 @@ const Tests = () => {
         await fetchTests();
       } else {
         const error = await response.json();
-        alert(error.message || 'Error deleting test');
+        alert(error.message || 'Ошибка удаления теста');
       }
     } catch (error) {
-      console.error('Error deleting test:', error);
+      console.error('Ошибка удаления теста:', error);
+    }
+  };
+
+  const toggleTestStatus = async (id: number, currentStatus: boolean) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`http://localhost:8000/api/admin/tests/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_active: !currentStatus }),
+      });
+
+      if (response.ok) {
+        await fetchTests();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Ошибка обновления статуса теста');
+      }
+    } catch (error) {
+      console.error('Ошибка обновления статуса теста:', error);
     }
   };
 
@@ -396,24 +419,61 @@ const Tests = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleEdit(test)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDuplicate(test.id)}
-                      className="text-green-600 hover:text-green-900 mr-3"
-                    >
-                      Duplicate
-                    </button>
-                    <button
-                      onClick={() => handleDelete(test.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      {/* Edit Button */}
+                      <button
+                        onClick={() => handleEdit(test)}
+                        className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Редактировать тест"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+
+                      {/* Toggle Status Button */}
+                      <button
+                        onClick={() => toggleTestStatus(test.id, test.is_active)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          test.is_active 
+                            ? 'text-orange-600 hover:text-orange-900 hover:bg-orange-50' 
+                            : 'text-green-600 hover:text-green-900 hover:bg-green-50'
+                        }`}
+                        title={test.is_active ? 'Деактивировать тест' : 'Активировать тест'}
+                      >
+                        {test.is_active ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+
+                      {/* Duplicate Button */}
+                      <button
+                        onClick={() => handleDuplicate(test.id)}
+                        className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Дублировать тест"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => handleDelete(test.id)}
+                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Удалить тест"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

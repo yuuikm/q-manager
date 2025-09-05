@@ -6,7 +6,10 @@ interface Document {
   id: number;
   title: string;
   description: string;
-  category: string;
+  category: {
+    id: number;
+    name: string;
+  } | null;
   price: number;
   file_name: string;
   file_type: string;
@@ -55,7 +58,7 @@ const Documents = () => {
       const response = await fetch(DOCUMENT_ENDPOINTS.GET_CATEGORIES);
       if (response.ok) {
         const data = await response.json();
-        setCategories(data);
+        setCategories(data.map((cat: any) => cat.name));
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -66,7 +69,7 @@ const Documents = () => {
     .filter(doc => {
       const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            doc.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || doc.category === selectedCategory;
+      const matchesCategory = selectedCategory === 'all' || doc.category?.name === selectedCategory;
       return matchesSearch && matchesCategory;
     })
     .sort((a, b) => {
@@ -247,7 +250,7 @@ const Documents = () => {
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                 }`}
               >
-                {cat} ({documents.filter(doc => doc.category === cat).length})
+                {cat} ({documents.filter(doc => doc.category?.name === cat).length})
               </button>
             ))}
           </div>
@@ -285,7 +288,7 @@ const Documents = () => {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-3">
                     <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                      {document.category}
+                      {document.category?.name || 'Без категории'}
                     </span>
                     <span className="text-sm text-gray-500">
                       {formatFileSize(document.file_size)}

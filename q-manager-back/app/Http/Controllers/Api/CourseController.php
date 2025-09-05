@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseMaterial;
 use App\Models\Test;
+use App\Models\CourseCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,7 @@ class CourseController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Course::with(['author', 'materials', 'tests', 'enrollments']);
+        $query = Course::with(['author', 'materials', 'tests', 'enrollments', 'category']);
 
         // Filter by type
         if ($request->has('type')) {
@@ -27,7 +28,9 @@ class CourseController extends Controller
 
         // Filter by category
         if ($request->has('category')) {
-            $query->where('category', $request->get('category'));
+            $query->whereHas('category', function($q) use ($request) {
+                $q->where('name', $request->get('category'));
+            });
         }
 
         // Filter by published status
@@ -84,7 +87,6 @@ class CourseController extends Controller
             'content' => $request->content,
             'price' => $request->price,
             'type' => $request->type,
-            'category' => $request->category,
             'max_students' => $request->max_students,
             'duration_hours' => $request->duration_hours,
             'requirements' => $request->requirements,
@@ -105,8 +107,22 @@ class CourseController extends Controller
             $data['certificate_template'] = $request->file('certificate_template')->store('courses/certificates', 'public');
         }
 
+        // Handle category - find existing or create new
+        $categoryName = $request->category;
+        $category = CourseCategory::where('name', $categoryName)->first();
+        
+        if (!$category) {
+            // Create new category
+            $category = CourseCategory::create([
+                'name' => $categoryName,
+                'slug' => Str::slug($categoryName),
+            ]);
+        }
+
+        $data['category_id'] = $category->id;
         $course = Course::create($data);
-        $course->load(['author', 'materials', 'tests', 'enrollments']);
+        
+        $course->load(['author', 'materials', 'tests', 'enrollments', 'category']);
 
         return response()->json($course, 201);
     }
@@ -116,7 +132,7 @@ class CourseController extends Controller
      */
     public function show(string $id)
     {
-        $course = Course::with(['author', 'materials', 'tests', 'enrollments'])->findOrFail($id);
+        $course = Course::with(['author', 'materials', 'tests', 'enrollments', 'categories'])->findOrFail($id);
         
         // Increment view count
         $course->increment('views_count');
@@ -157,7 +173,6 @@ class CourseController extends Controller
             'content' => $request->content,
             'price' => $request->price,
             'type' => $request->type,
-            'category' => $request->category,
             'max_students' => $request->max_students,
             'duration_hours' => $request->duration_hours,
             'requirements' => $request->requirements,
@@ -185,8 +200,22 @@ class CourseController extends Controller
             $data['certificate_template'] = $request->file('certificate_template')->store('courses/certificates', 'public');
         }
 
+        // Handle category - find existing or create new
+        $categoryName = $request->category;
+        $category = CourseCategory::where('name', $categoryName)->first();
+        
+        if (!$category) {
+            // Create new category
+            $category = CourseCategory::create([
+                'name' => $categoryName,
+                'slug' => Str::slug($categoryName),
+            ]);
+        }
+
+        $data['category_id'] = $category->id;
         $course->update($data);
-        $course->load(['author', 'materials', 'tests', 'enrollments']);
+        
+        $course->load(['author', 'materials', 'tests', 'enrollments', 'category']);
 
         return response()->json($course);
     }
@@ -206,7 +235,9 @@ class CourseController extends Controller
             Storage::disk('public')->delete($course->certificate_template);
         }
 
+        // Delete the course (this will also delete pivot table entries due to cascade)
         $course->delete();
+
         return response()->json(['message' => 'Course deleted successfully']);
     }
 

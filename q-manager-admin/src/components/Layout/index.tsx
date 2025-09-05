@@ -17,6 +17,15 @@ const Layout: FC<LayoutProps> = ({ children }) => {
   };
 
   const isActive = (path: string) => {
+    if (path === '/admin/documents') {
+      return location.pathname.startsWith('/admin/documents');
+    }
+    if (path === '/admin/news') {
+      return location.pathname.startsWith('/admin/news');
+    }
+    if (path === '/admin/courses') {
+      return location.pathname.startsWith('/admin/courses');
+    }
     return location.pathname === path;
   };
 
@@ -29,11 +38,10 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 
   const menuItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { path: '/documents', label: 'Documents', icon: '📄' },
-    { path: '/news', label: 'News', icon: '📰' },
-    { path: '/courses', label: 'Courses', icon: '🎓' },
+    { path: '/admin/documents', label: 'Documents', icon: '📄' },
+    { path: '/admin/news', label: 'News', icon: '📰' },
+    { path: '/admin/courses', label: 'Courses', icon: '🎓' },
     { path: '/tests', label: 'Tests', icon: '📝' },
-    { path: '/upload', label: 'Upload Document', icon: '⬆️' },
   ];
 
   return (

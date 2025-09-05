@@ -5,39 +5,33 @@ interface Category {
   id: number;
   name: string;
   slug: string;
-  description?: string;
-  color: string;
-  icon?: string;
-  is_active: boolean;
-  sort_order: number;
   created_at: string;
   updated_at: string;
 }
+
+type CategoryType = 'documents' | 'courses' | 'news';
 
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categoryType, setCategoryType] = useState<CategoryType>('documents');
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    color: '#667eea',
-    icon: '',
-    is_active: true,
-    sort_order: 0,
   });
 
   const { user } = useAppSelector((state: any) => state.auth);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [categoryType]);
 
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:8000/api/admin/categories', {
+      const endpoint = `http://localhost:8000/api/admin/${categoryType}-categories`;
+      const response = await fetch(endpoint, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -49,7 +43,7 @@ const Categories = () => {
         setCategories(data);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Ошибка загрузки категорий:', error);
     } finally {
       setLoading(false);
     }
@@ -60,9 +54,10 @@ const Categories = () => {
     
     try {
       const token = localStorage.getItem('auth_token');
+      const baseUrl = `http://localhost:8000/api/admin/${categoryType}-categories`;
       const url = editingCategory 
-        ? `http://localhost:8000/api/admin/categories/${editingCategory.id}`
-        : 'http://localhost:8000/api/admin/categories';
+        ? `${baseUrl}/${editingCategory.id}`
+        : baseUrl;
       
       const method = editingCategory ? 'PUT' : 'POST';
       
@@ -81,15 +76,10 @@ const Categories = () => {
         setEditingCategory(null);
         setFormData({
           name: '',
-          description: '',
-          color: '#667eea',
-          icon: '',
-          is_active: true,
-          sort_order: 0,
         });
       }
     } catch (error) {
-      console.error('Error saving category:', error);
+      console.error('Ошибка сохранения категории:', error);
     }
   };
 
@@ -97,21 +87,16 @@ const Categories = () => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      description: category.description || '',
-      color: category.color,
-      icon: category.icon || '',
-      is_active: category.is_active,
-      sort_order: category.sort_order,
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+    if (!confirm('Вы уверены, что хотите удалить эту категорию?')) return;
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/categories/${id}`, {
+      const response = await fetch(`http://localhost:8000/api/admin/${categoryType}-categories/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -122,10 +107,10 @@ const Categories = () => {
         await fetchCategories();
       } else {
         const error = await response.json();
-        alert(error.message || 'Error deleting category');
+        alert(error.message || 'Ошибка удаления категории');
       }
     } catch (error) {
-      console.error('Error deleting category:', error);
+      console.error('Ошибка удаления категории:', error);
     }
   };
 
@@ -133,11 +118,6 @@ const Categories = () => {
     setEditingCategory(null);
     setFormData({
       name: '',
-      description: '',
-      color: '#667eea',
-      icon: '',
-      is_active: true,
-      sort_order: 0,
     });
     setShowModal(true);
   };
@@ -152,17 +132,48 @@ const Categories = () => {
     );
   }
 
+  const getCategoryTypeLabel = (type: CategoryType) => {
+    switch (type) {
+      case 'documents': return 'Документы';
+      case 'courses': return 'Курсы';
+      case 'news': return 'Новости';
+      default: return 'Документы';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="admin-card">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Categories Management</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Управление категориями</h2>
           <button
             onClick={openModal}
             className="admin-button admin-button-primary"
           >
-            Add New Category
+            Добавить категорию
           </button>
+        </div>
+
+        {/* Category Type Selector */}
+        <div className="mb-6">
+          <div className="flex space-x-4">
+            {(['documents', 'courses', 'news'] as CategoryType[]).map((type) => (
+              <button
+                key={type}
+                onClick={() => setCategoryType(type)}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  categoryType === type
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {getCategoryTypeLabel(type)}
+              </button>
+            ))}
+          </div>
+          <p className="text-sm text-gray-600 mt-2">
+            Выберите тип категорий для управления: {getCategoryTypeLabel(categoryType)}
+          </p>
         </div>
 
         <div className="overflow-x-auto">
@@ -170,19 +181,16 @@ const Categories = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
+                  Название категории
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Color
+                  Slug
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  Создана
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sort Order
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  Действия
                 </th>
               </tr>
             </thead>
@@ -190,59 +198,28 @@ const Categories = () => {
               {categories.map((category) => (
                 <tr key={category.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      {category.icon && (
-                        <span className="text-2xl mr-3">{category.icon}</span>
-                      )}
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {category.name}
-                        </div>
-                        {category.description && (
-                          <div className="text-sm text-gray-500">
-                            {category.description}
-                          </div>
-                        )}
-                      </div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {category.name}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div
-                        className="w-6 h-6 rounded-full border border-gray-300"
-                        style={{ backgroundColor: category.color }}
-                      ></div>
-                      <span className="ml-2 text-sm text-gray-600">
-                        {category.color}
-                      </span>
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {category.slug}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        category.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {category.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {category.sort_order}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(category.created_at).toLocaleDateString('ru-RU')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => handleEdit(category)}
                       className="text-blue-600 hover:text-blue-900 mr-3"
                     >
-                      Edit
+                      Редактировать
                     </button>
                     <button
                       onClick={() => handleDelete(category.id)}
                       className="text-red-600 hover:text-red-900"
                     >
-                      Delete
+                      Удалить
                     </button>
                   </td>
                 </tr>
@@ -250,21 +227,28 @@ const Categories = () => {
             </tbody>
           </table>
         </div>
+
+        {categories.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-gray-600 text-lg mb-4">Категории не найдены</p>
+            <p className="text-gray-500">Создайте первую категорию для начала работы</p>
+          </div>
+        )}
       </div>
 
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-10 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {editingCategory ? 'Edit Category' : 'Add New Category'}
+                {editingCategory ? 'Редактировать категорию' : 'Добавить новую категорию'}
               </h3>
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name *
+                    Название категории *
                   </label>
                   <input
                     type="text"
@@ -272,78 +256,8 @@ const Categories = () => {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Введите название категории"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Color
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="color"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="w-12 h-8 border border-gray-300 rounded"
-                    />
-                    <input
-                      type="text"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Icon (Emoji)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.icon}
-                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                    placeholder="📁"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sort Order
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.sort_order}
-                    onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="is_active"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
-                    Active
-                  </label>
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4">
@@ -352,13 +266,13 @@ const Categories = () => {
                     onClick={() => setShowModal(false)}
                     className="admin-button admin-button-secondary"
                   >
-                    Cancel
+                    Отмена
                   </button>
                   <button
                     type="submit"
                     className="admin-button admin-button-primary"
                   >
-                    {editingCategory ? 'Update' : 'Create'}
+                    {editingCategory ? 'Обновить' : 'Создать'}
                   </button>
                 </div>
               </form>

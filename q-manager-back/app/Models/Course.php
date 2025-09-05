@@ -16,7 +16,6 @@ class Course extends Model
         'content',
         'price',
         'type',
-        'category',
         'featured_image',
         'certificate_template',
         'max_students',
@@ -32,6 +31,7 @@ class Course extends Model
         'enrollments_count',
         'completion_rate',
         'created_by',
+        'category_id',
     ];
 
     protected $casts = [
@@ -55,7 +55,7 @@ class Course extends Model
 
     public function category()
     {
-        return $this->belongsTo(CourseCategory::class, 'course_category_id');
+        return $this->belongsTo(CourseCategory::class);
     }
 
     public function materials()
@@ -92,5 +92,12 @@ class Course extends Model
     public function scopeByType($query, $type)
     {
         return $query->where('type', $type);
+    }
+
+    public function scopeByCategory($query, $category)
+    {
+        return $query->whereHas('category', function ($q) use ($category) {
+            $q->where('name', $category);
+        });
     }
 }

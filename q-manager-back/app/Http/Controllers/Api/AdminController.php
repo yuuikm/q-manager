@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\DocumentCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -13,7 +14,7 @@ class AdminController extends Controller
 {
     public function getPublicDocument($id)
     {
-        $document = Document::with('creator')
+        $document = Document::with(['creator', 'category'])
             ->where('is_active', true)
             ->findOrFail($id);
         
@@ -22,10 +23,12 @@ class AdminController extends Controller
 
     public function getPublicDocuments(Request $request)
     {
-        $documents = Document::with('creator')
+        $documents = Document::with(['creator', 'category'])
             ->where('is_active', true)
             ->when($request->category, function ($query, $category) {
-                return $query->where('category', $category);
+                return $query->whereHas('category', function($q) use ($category) {
+                    $q->where('name', $category);
+                });
             })
             ->when($request->search, function ($query, $search) {
                 return $query->where('title', 'like', "%{$search}%")
@@ -35,6 +38,12 @@ class AdminController extends Controller
             ->paginate(12);
 
         return response()->json($documents);
+    }
+
+    public function getCategories()
+    {
+        $categories = DocumentCategory::orderBy('name')->get();
+        return response()->json($categories);
     }
 
     public function uploadDocument(Request $request)
@@ -56,10 +65,21 @@ class AdminController extends Controller
             $fileName = time() . '_' . $file->getClientOriginalName();
             $filePath = $file->storeAs('documents', $fileName, 'public');
 
+            // Handle category - find existing or create new
+            $categoryName = $request->category;
+            $category = DocumentCategory::where('name', $categoryName)->first();
+            
+            if (!$category) {
+                // Create new category
+                $category = DocumentCategory::create([
+                    'name' => $categoryName,
+                    'slug' => \Str::slug($categoryName),
+                ]);
+            }
+
             $document = Document::create([
                 'title' => $request->title,
                 'description' => $request->description,
-                'category' => $request->category,
                 'price' => $request->price,
                 'file_path' => $filePath,
                 'file_name' => $file->getClientOriginalName(),
@@ -67,11 +87,12 @@ class AdminController extends Controller
                 'file_size' => $file->getSize(),
                 'created_by' => $request->user()->id,
                 'buy_number' => 0,
+                'category_id' => $category->id,
             ]);
 
             return response()->json([
                 'message' => 'Document uploaded successfully',
-                'document' => $document->load('creator'),
+                'document' => $document->load(['creator', 'category']),
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -83,9 +104,11 @@ class AdminController extends Controller
 
     public function getDocuments(Request $request)
     {
-        $documents = Document::with('creator')
+        $documents = Document::with(['creator', 'category'])
             ->when($request->category, function ($query, $category) {
-                return $query->where('category', $category);
+                return $query->whereHas('category', function($q) use ($category) {
+                    $q->where('name', $category);
+                });
             })
             ->when($request->search, function ($query, $search) {
                 return $query->where('title', 'like', "%{$search}%")
@@ -102,101 +125,117 @@ class AdminController extends Controller
         $document = Document::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'category' => 'sometimes|required|string|max:100',
-            'price' => 'sometimes|required|numeric|min:0',
-            'is_active' => 'sometimes|boolean',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:500',
+            'category' => 'required|string|max:100',
+            'price' => 'required|numeric|min:0',
+            'is_active' => 'boolean',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $document->update($request->only(['title', 'description', 'category', 'price', 'is_active']));
+        $document->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'price' => $request->price,
+            'is_active' => $request->is_active ?? $document->is_active,
+        ]);
+
+        // Handle category - find existing or create new
+        $categoryName = $request->category;
+        $category = DocumentCategory::where('name', $categoryName)->first();
+        
+        if (!$category) {
+            // Create new category
+            $category = DocumentCategory::create([
+                'name' => $categoryName,
+                'slug' => \Str::slug($categoryName),
+            ]);
+        }
+
+        // Update category relationship
+        $document->update(['category_id' => $category->id]);
 
         return response()->json([
             'message' => 'Document updated successfully',
-            'document' => $document->load('creator'),
+            'document' => $document->load(['creator', 'category']),
         ]);
     }
 
     public function deleteDocument($id)
     {
         $document = Document::findOrFail($id);
-        
-        if (Storage::disk('public')->exists($document->file_path)) {
+
+        // Delete the file
+        if ($document->file_path) {
             Storage::disk('public')->delete($document->file_path);
         }
-        
+
+        // Delete the document (this will also delete pivot table entries due to cascade)
         $document->delete();
 
         return response()->json(['message' => 'Document deleted successfully']);
     }
 
-    public function getDocument($id)
-    {
-        $document = Document::with('creator')->findOrFail($id);
-        return response()->json($document);
-    }
-
-    public function downloadDocument($id)
+    public function toggleDocumentStatus($id)
     {
         $document = Document::findOrFail($id);
-        
-        // Check if user has purchased the document or if it's free
-        if ($document->price > 0) {
-            // TODO: Add purchase verification logic here
-            // For now, we'll allow downloads (you can add purchase verification later)
-        }
-        
-        $filePath = storage_path('app/public/' . $document->file_path);
-        
-        if (!file_exists($filePath)) {
-            return response()->json(['message' => 'File not found'], 404);
-        }
-        
-        // Increment buy_number when downloaded
-        $document->increment('buy_number');
-        
-        return response()->download($filePath, $document->file_name);
+        $document->update(['is_active' => !$document->is_active]);
+
+        return response()->json([
+            'message' => 'Document status updated successfully',
+            'document' => $document->load(['creator', 'category']),
+        ]);
     }
 
-    public function previewDocument($id)
+    public function getUsers(Request $request)
     {
-        $document = Document::findOrFail($id);
-        
-        $filePath = storage_path('app/public/' . $document->file_path);
-        
-        if (!file_exists($filePath)) {
-            return response()->json(['message' => 'File not found'], 404);
-        }
-        
-        // For PDF files, return the full document for preview
-        // TODO: Implement first page extraction using FPDI
-        $fileExtension = strtolower(pathinfo($document->file_name, PATHINFO_EXTENSION));
-        
-        if ($fileExtension === 'pdf') {
-            return response()->file($filePath, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="preview_' . $document->file_name . '"',
-                'X-Preview-Mode' => 'true',
-                'X-Preview-Note' => 'Full document shown for preview. Purchase to download.'
-            ]);
-        } else {
-            // For non-PDF files, return a preview message
-            return response()->json([
-                'message' => 'Preview not available for this file type',
-                'file_type' => $document->file_type,
-                'file_name' => $document->file_name,
-                'preview_available' => false
-            ]);
-        }
+        $users = User::when($request->search, function ($query, $search) {
+            return $query->where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
+        })
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
+
+        return response()->json($users);
     }
 
-    public function getCategories()
+    public function updateUser(Request $request, $id)
     {
-        $categories = Document::distinct()->pluck('category');
-        return response()->json($categories);
+        $user = User::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'role' => 'required|in:user,admin',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'role' => $request->role,
+        ]);
+
+        return response()->json([
+            'message' => 'User updated successfully',
+            'user' => $user,
+        ]);
+    }
+
+    public function deleteUser($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return response()->json(['message' => 'User deleted successfully']);
     }
 }

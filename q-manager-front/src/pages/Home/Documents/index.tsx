@@ -6,7 +6,10 @@ interface Document {
   id: number;
   title: string;
   description: string;
-  category: string;
+  category: {
+    id: number;
+    name: string;
+  } | null;
   price: number;
   file_name: string;
   file_type: string;
@@ -50,10 +53,10 @@ const Documents = () => {
     try {
       const response = await fetch(DOCUMENT_ENDPOINTS.GET_CATEGORIES);
       if (response.ok) {
-        const categoryNames = await response.json();
-        const categoryCounts = categoryNames.map((name: string) => ({
-          name,
-          count: documents.filter(doc => doc.category === name).length
+        const categoryData = await response.json();
+        const categoryCounts = categoryData.map((cat: any) => ({
+          name: cat.name,
+          count: documents.filter(doc => doc.category?.name === cat.name).length
         }));
         setCategories(categoryCounts);
       }
@@ -64,7 +67,7 @@ const Documents = () => {
 
   const filteredDocuments = selectedCategory === 'all' 
     ? documents 
-    : documents.filter(doc => doc.category === selectedCategory);
+    : documents.filter(doc => doc.category?.name === selectedCategory);
 
   const handleCategoryClick = (category: string) => {
     if (category === 'all') {
@@ -196,7 +199,7 @@ const Documents = () => {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-3">
                     <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                      {document.category}
+                      {document.category?.name || 'Без категории'}
                     </span>
                     <span className="text-sm text-gray-500">
                       {formatFileSize(document.file_size)}

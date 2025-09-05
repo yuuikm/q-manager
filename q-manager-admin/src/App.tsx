@@ -6,9 +6,13 @@ import Login from 'pages/Login';
 import Dashboard from 'pages/Dashboard';
 import DocumentUpload from 'pages/DocumentUpload';
 import DocumentList from 'pages/DocumentList';
-
-import News from 'pages/News';
-import Courses from 'pages/Courses';
+import DocumentCategories from 'pages/DocumentCategories';
+import CourseUpload from 'pages/CourseUpload';
+import CourseList from 'pages/CourseList';
+import CourseCategories from 'pages/CourseCategories';
+import NewsUpload from 'pages/NewsUpload';
+import NewsList from 'pages/NewsList';
+import NewsCategories from 'pages/NewsCategories';
 import Tests from 'pages/Tests';
 import Layout from 'components/Layout';
 
@@ -60,11 +64,28 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
 
+          {/* Documents Routes */}
+          <Route path="/admin/documents" element={<DocumentList />} />
+          <Route path="/admin/documents/upload" element={<DocumentUpload />} />
+          <Route path="/admin/documents/categories" element={<DocumentCategories />} />
+
+          {/* Courses Routes */}
+          <Route path="/admin/courses" element={<CourseList />} />
+          <Route path="/admin/courses/upload" element={<CourseUpload />} />
+          <Route path="/admin/courses/categories" element={<CourseCategories />} />
+
+          {/* News Routes */}
+          <Route path="/admin/news" element={<NewsList />} />
+          <Route path="/admin/news/upload" element={<NewsUpload />} />
+          <Route path="/admin/news/categories" element={<NewsCategories />} />
+
+          {/* Legacy Routes (for backward compatibility) */}
           <Route path="/documents" element={<DocumentList />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/courses" element={<Courses />} />
+          <Route path="/news" element={<NewsList />} />
+          <Route path="/courses" element={<CourseList />} />
           <Route path="/tests" element={<Tests />} />
           <Route path="/upload" element={<DocumentUpload />} />
+          
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Layout>

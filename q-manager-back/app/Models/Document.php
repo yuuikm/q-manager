@@ -9,7 +9,6 @@ class Document extends Model
     protected $fillable = [
         'title',
         'description',
-        'category',
         'price',
         'file_path',
         'file_name',
@@ -19,6 +18,7 @@ class Document extends Model
         'created_by',
         'user_id',
         'buy_number',
+        'category_id',
     ];
 
     protected $casts = [
@@ -40,7 +40,7 @@ class Document extends Model
 
     public function category()
     {
-        return $this->belongsTo(DocumentCategory::class, 'document_category_id');
+        return $this->belongsTo(DocumentCategory::class);
     }
 
     public function scopeActive($query)
@@ -50,7 +50,9 @@ class Document extends Model
 
     public function scopeByCategory($query, $category)
     {
-        return $query->where('category', $category);
+        return $query->whereHas('category', function ($q) use ($category) {
+            $q->where('name', $category);
+        });
     }
 
     public function scopeByUser($query, $userId)

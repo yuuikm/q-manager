@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DocumentCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class DocumentCategoryController extends Controller
@@ -14,7 +15,7 @@ class DocumentCategoryController extends Controller
      */
     public function index()
     {
-        $categories = DocumentCategory::orderBy('sort_order')->orderBy('name')->get();
+        $categories = DocumentCategory::orderBy('name')->get();
         return response()->json($categories);
     }
 
@@ -25,14 +26,13 @@ class DocumentCategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:document_categories,name',
-            'description' => 'nullable|string',
-            'color' => 'nullable|string|max:7',
-            'icon' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
         ]);
 
-        $category = DocumentCategory::create($request->all());
+        $category = DocumentCategory::create([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+        ]);
+
         return response()->json($category, 201);
     }
 
@@ -51,17 +51,16 @@ class DocumentCategoryController extends Controller
     public function update(Request $request, string $id)
     {
         $category = DocumentCategory::findOrFail($id);
-        
+
         $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('document_categories')->ignore($category->id)],
-            'description' => 'nullable|string',
-            'color' => 'nullable|string|max:7',
-            'icon' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
+            'name' => ['required', 'string', 'max:255', Rule::unique('document_categories', 'name')->ignore($category->id)],
         ]);
 
-        $category->update($request->all());
+        $category->update([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+        ]);
+
         return response()->json($category);
     }
 
@@ -72,13 +71,13 @@ class DocumentCategoryController extends Controller
     {
         $category = DocumentCategory::findOrFail($id);
         
-        // Check if category is used by any documents
+        // Check if category is being used by documents
         if ($category->documents()->count() > 0) {
             return response()->json([
                 'message' => 'Cannot delete category that is being used by documents.'
             ], 422);
         }
-        
+
         $category->delete();
         return response()->json(['message' => 'Category deleted successfully']);
     }

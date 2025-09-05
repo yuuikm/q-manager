@@ -12,26 +12,33 @@ class Category extends Model
     protected $fillable = [
         'name',
         'slug',
-        'description',
-        'color',
-        'icon',
-        'is_active',
-        'sort_order',
-    ];
-
-    protected $casts = [
-        'is_active' => 'boolean',
-        'sort_order' => 'integer',
     ];
 
     // Relationships
     public function documents()
     {
-        return $this->hasMany(Document::class, 'category', 'name');
+        return $this->belongsToMany(Document::class, 'document_categories');
     }
 
     public function courses()
     {
-        return $this->hasMany(Course::class, 'category', 'name');
+        return $this->belongsToMany(Course::class, 'course_categories');
+    }
+
+    public function news()
+    {
+        return $this->belongsToMany(News::class, 'news_categories');
+    }
+
+    // Auto-generate slug from name
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($category) {
+            if (empty($category->slug)) {
+                $category->slug = \Str::slug($category->name);
+            }
+        });
     }
 }

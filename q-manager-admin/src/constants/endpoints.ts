@@ -13,8 +13,6 @@ export const ADMIN_ENDPOINTS = {
   GET_DOCUMENT: `${API_BASE_URL}/admin/documents`,
   UPDATE_DOCUMENT: `${API_BASE_URL}/admin/documents`,
   DELETE_DOCUMENT: `${API_BASE_URL}/admin/documents`,
-  GET_CATEGORIES: `${API_BASE_URL}/admin/categories`,
-  CATEGORIES: `${API_BASE_URL}/admin/categories`,
   NEWS: `${API_BASE_URL}/admin/news`,
   COURSES: `${API_BASE_URL}/admin/courses`,
   TESTS: `${API_BASE_URL}/admin/tests`,
