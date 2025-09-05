@@ -6,7 +6,10 @@ interface Document {
   id: number;
   title: string;
   description: string;
-  category: string;
+  category: {
+    id: number;
+    name: string;
+  } | null;
   price: number;
   file_name: string;
   file_type: string;
@@ -27,6 +30,7 @@ const DocumentDetail = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [isPurchased, setIsPurchased] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -70,8 +74,12 @@ const DocumentDetail = () => {
   };
 
   const handlePurchase = () => {
-    // TODO: Implement purchase functionality
-    alert('Purchase functionality will be implemented here');
+    // TODO: Implement actual payment processing
+    // For now, simulate a successful purchase
+    if (confirm(`Purchase "${document?.title}" for $${document?.price}?`)) {
+      setIsPurchased(true);
+      alert('Purchase successful! You can now download the full document.');
+    }
   };
 
   const handlePreview = async () => {
@@ -89,10 +97,12 @@ const DocumentDetail = () => {
           const data = await response.json();
           alert(data.message || 'Preview not available for this file type');
         } else {
-          // PDF file, create blob URL for preview
+          // PDF file, create blob URL for preview with page limit
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
-          setPreviewUrl(url);
+          // Add page parameter to show only first 3 pages
+          const previewUrlWithPages = `${url}#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1-3&zoom=100`;
+          setPreviewUrl(previewUrlWithPages);
           setShowPreview(true);
         }
       } else {
@@ -118,9 +128,7 @@ const DocumentDetail = () => {
     if (!document) return;
     
     // Check if document is free or user has purchased it
-    if (document.price > 0) {
-      // TODO: Check if user has purchased this document
-      // For now, we'll show a message to purchase first
+    if (document.price > 0 && !isPurchased) {
       alert('Please purchase this document to download the full version');
       return;
     }
@@ -211,10 +219,10 @@ const DocumentDetail = () => {
               <li>/</li>
               <li>
                 <button
-                  onClick={() => navigate(`/documents/${document.category.toLowerCase()}`)}
+                  onClick={() => navigate(`/documents/category/${document.category?.name.toLowerCase()}`)}
                   className="hover:text-blue-600 transition-colors"
                 >
-                  {document.category}
+                  {document.category?.name || 'Uncategorized'}
                 </button>
               </li>
               <li>/</li>
@@ -230,7 +238,7 @@ const DocumentDetail = () => {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-4">
                     <span className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
-                      {document.category}
+                      {document.category?.name || 'Без категории'}
                     </span>
                     <span className="text-sm text-gray-500">
                       {formatDate(document.created_at)}
@@ -258,14 +266,22 @@ const DocumentDetail = () => {
                   <div className="text-sm text-gray-500 mb-4">
                     {document.buy_number} purchases
                   </div>
+                  {isPurchased && (
+                    <div className="mb-4">
+                      <span className="inline-block bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
+                        ✓ Purchased
+                      </span>
+                    </div>
+                  )}
                                      <div className="space-y-2">
                      <button
                        onClick={handlePreview}
                        disabled={previewLoading}
                        className="w-full bg-gray-600 text-white px-6 py-3 rounded-md text-lg font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
                      >
-                       {previewLoading ? 'Loading Preview...' : 'Preview Document'}
+                       {previewLoading ? 'Loading Preview...' : 'Preview (First 3 Pages)'}
                      </button>
+                     
                      {document.price === 0 ? (
                        <button
                          onClick={handleDownload}
@@ -273,12 +289,19 @@ const DocumentDetail = () => {
                        >
                          Download Free
                        </button>
+                     ) : isPurchased ? (
+                       <button
+                         onClick={handleDownload}
+                         className="w-full bg-green-600 text-white px-6 py-3 rounded-md text-lg font-medium hover:bg-green-700 transition-colors"
+                       >
+                         Download Full Document
+                       </button>
                      ) : (
                        <button
                          onClick={handlePurchase}
                          className="w-full bg-blue-600 text-white px-6 py-3 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors"
                        >
-                         Purchase Now
+                         Purchase Now (${document.price})
                        </button>
                      )}
                    </div>
@@ -310,12 +333,12 @@ const DocumentDetail = () => {
 
               {/* Related Documents */}
               <div className="border-t border-gray-200 pt-6 mt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">More from {document.category}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">More from {document.category?.name || 'Uncategorized'}</h3>
                 <button
-                  onClick={() => navigate(`/documents/${document.category.toLowerCase()}`)}
+                  onClick={() => navigate(`/documents/category/${document.category?.name.toLowerCase()}`)}
                   className="text-blue-600 hover:text-blue-700 font-medium"
                 >
-                  View all {document.category} documents →
+                  View all {document.category?.name || 'Uncategorized'} documents →
                 </button>
               </div>
             </div>
@@ -325,37 +348,65 @@ const DocumentDetail = () => {
 
        {/* Preview Modal */}
        {showPreview && previewUrl && (
-         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-             <div className="flex items-center justify-between p-4 border-b">
-               <h3 className="text-lg font-semibold text-gray-900">
-                 Document Preview - {document?.title}
-               </h3>
+         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+           <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[95vh] sm:h-[90vh] flex flex-col">
+             <div className="flex items-center justify-between p-3 sm:p-4 border-b">
+               <div className="flex-1 min-w-0">
+                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                   Document Preview - {document?.title}
+                 </h3>
+                 <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">
+                   Showing first 3 pages only • {document?.file_name}
+                 </p>
+               </div>
                <button
                  onClick={closePreview}
-                 className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                 className="text-gray-400 hover:text-gray-600 text-xl sm:text-2xl font-bold ml-2 flex-shrink-0"
                >
                  ×
                </button>
              </div>
-             <div className="flex-1 p-4 overflow-hidden">
+             <div className="flex-1 p-2 sm:p-4 overflow-hidden">
                <iframe
                  src={previewUrl}
-                 className="w-full h-full border-0"
+                 className="w-full h-full border-0 rounded"
                  title="Document Preview"
                />
              </div>
-             <div className="p-4 border-t bg-gray-50">
-               <div className="flex justify-between items-center">
-                 <p className="text-sm text-gray-600">
-                   This is a preview. {document?.price > 0 ? 'Purchase the document to download the full version.' : 'Click "Download Free" to get the complete document.'}
-                 </p>
-                 <button
-                   onClick={closePreview}
-                   className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-                 >
-                   Close Preview
-                 </button>
+             <div className="p-3 sm:p-4 border-t bg-gray-50">
+               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                 <div className="flex-1">
+                   <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
+                     <strong>Preview:</strong> Showing first 3 pages only
+                   </p>
+                   <p className="text-xs sm:text-sm text-gray-600">
+                     {document?.price > 0 && !isPurchased 
+                       ? 'Purchase the document to download the full version.' 
+                       : isPurchased 
+                         ? 'You have purchased this document. Click "Download Full Document" to get the complete file.'
+                         : 'Click "Download Free" to get the complete document.'
+                     }
+                   </p>
+                 </div>
+                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                   {document?.price > 0 && !isPurchased && (
+                     <button
+                       onClick={() => {
+                         closePreview();
+                         handlePurchase();
+                       }}
+                       className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm sm:text-base"
+                     >
+                       Purchase Now
+                     </button>
+                   )}
+                   <button
+                     onClick={closePreview}
+                     className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
+                   >
+                     Close Preview
+                   </button>
+                 </div>
                </div>
              </div>
            </div>

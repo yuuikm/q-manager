@@ -12,9 +12,12 @@ export const ADMIN_ENDPOINTS = {
   GET_DOCUMENTS: `${API_BASE_URL}/admin/documents`,
   GET_DOCUMENT: `${API_BASE_URL}/admin/documents`,
   UPDATE_DOCUMENT: `${API_BASE_URL}/admin/documents`,
+  TOGGLE_DOCUMENT_STATUS: `${API_BASE_URL}/admin/documents`,
   DELETE_DOCUMENT: `${API_BASE_URL}/admin/documents`,
   NEWS: `${API_BASE_URL}/admin/news`,
+  TOGGLE_NEWS_STATUS: `${API_BASE_URL}/admin/news`,
   COURSES: `${API_BASE_URL}/admin/courses`,
+  TOGGLE_COURSE_STATUS: `${API_BASE_URL}/admin/courses`,
   TESTS: `${API_BASE_URL}/admin/tests`,
 };
 

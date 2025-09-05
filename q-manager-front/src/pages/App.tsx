@@ -15,8 +15,8 @@ function App() {
       <Route path={links.register} element={<Register />} />
       <Route path="/profile" element={<Profile />} />
       <Route path={links.documents} element={<Documents />} />
-      <Route path="/documents/:category" element={<Documents />} />
-      <Route path="/document/:id" element={<DocumentDetail />} />
+      <Route path="/documents/category/:category" element={<Documents />} />
+      <Route path="/documents/view/:id" element={<DocumentDetail />} />
     </Routes>
   );
 }

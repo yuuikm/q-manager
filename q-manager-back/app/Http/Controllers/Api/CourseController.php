@@ -80,6 +80,13 @@ class CourseController extends Controller
             'is_featured' => 'boolean',
         ]);
 
+        // Check if user is authenticated
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+        $userId = $user->id;
+
         $data = [
             'title' => $request->title,
             'slug' => Str::slug($request->title),
@@ -95,7 +102,7 @@ class CourseController extends Controller
             'schedule' => $request->schedule,
             'is_published' => $request->is_published ?? false,
             'is_featured' => $request->is_featured ?? false,
-            'created_by' => auth()->id(),
+            'created_by' => $userId,
         ];
 
         // Handle image uploads
@@ -269,5 +276,16 @@ class CourseController extends Controller
         $course = Course::findOrFail($id);
         $enrollments = $course->enrollments()->with('user')->get();
         return response()->json($enrollments);
+    }
+
+    public function togglePublishStatus($id)
+    {
+        $course = Course::findOrFail($id);
+        $course->update(['is_published' => !$course->is_published]);
+
+        return response()->json([
+            'message' => 'Course publish status updated successfully',
+            'course' => $course->load(['author', 'category']),
+        ]);
     }
 }

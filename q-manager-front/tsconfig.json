@@ -15,6 +15,7 @@
     "src/store",
     "src/shared",
     "src/constants",
+    "src/components",
     "src/styles",
     "src/custom.d.ts"
   ],
@@ -35,6 +36,9 @@
       ],
       "components/*": [
         "components/*"
+      ],
+      "constants/*": [
+        "constants/*"
       ],
       "styles/*": [
         "styles/*"

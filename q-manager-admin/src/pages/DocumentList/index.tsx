@@ -88,15 +88,12 @@ const DocumentList: FC = () => {
   const handleToggleStatus = async (id: number, currentStatus: boolean) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${ADMIN_ENDPOINTS.UPDATE_DOCUMENT}/${id}`, {
-        method: 'PUT',
+      const response = await fetch(`${ADMIN_ENDPOINTS.TOGGLE_DOCUMENT_STATUS}/${id}/toggle-status`, {
+        method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          is_active: !currentStatus,
-        }),
       });
 
       if (response.ok) {

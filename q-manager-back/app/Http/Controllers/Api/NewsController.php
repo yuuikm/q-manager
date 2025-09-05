@@ -274,4 +274,15 @@ class NewsController extends Controller
             'comment' => $comment->load('user')
         ], 201);
     }
+
+    public function togglePublishStatus($id)
+    {
+        $news = News::findOrFail($id);
+        $news->update(['is_published' => !$news->is_published]);
+
+        return response()->json([
+            'message' => 'News publish status updated successfully',
+            'news' => $news->load(['author', 'category']),
+        ]);
+    }
 }

@@ -238,4 +238,50 @@ class AdminController extends Controller
 
         return response()->json(['message' => 'User deleted successfully']);
     }
+
+    public function previewDocument($id)
+    {
+        $document = Document::findOrFail($id);
+
+        if (!$document->file_path) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+
+        $filePath = storage_path('app/public/' . $document->file_path);
+
+        if (!file_exists($filePath)) {
+            return response()->json(['message' => 'File not found on disk'], 404);
+        }
+
+        // Check if it's a PDF file
+        $fileExtension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        
+        if ($fileExtension !== 'pdf') {
+            return response()->json(['message' => 'Preview is only available for PDF files'], 400);
+        }
+
+        // Return the PDF file for preview
+        return response()->file($filePath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $document->file_name . '"',
+        ]);
+    }
+
+    public function downloadDocument($id)
+    {
+        $document = Document::findOrFail($id);
+
+        if (!$document->file_path) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+
+        $filePath = storage_path('app/public/' . $document->file_path);
+
+        if (!file_exists($filePath)) {
+            return response()->json(['message' => 'File not found on disk'], 404);
+        }
+
+        // Return the file for download
+        return response()->download($filePath, $document->file_name);
+    }
 }

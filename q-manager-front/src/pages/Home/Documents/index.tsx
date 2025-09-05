@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DOCUMENT_ENDPOINTS } from 'constants/endpoints';
+import DocumentCard from 'components/DocumentCard';
 
 interface Document {
   id: number;
@@ -77,64 +78,6 @@ const Documents = () => {
     }
   };
 
-  const handleDownload = async (documentId: number, fileName: string) => {
-    try {
-      const response = await fetch(`${DOCUMENT_ENDPOINTS.DOWNLOAD_DOCUMENT}/${documentId}/download`);
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = window.document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        window.document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        window.document.body.removeChild(a);
-      } else {
-        alert('Failed to download document');
-      }
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('An error occurred while downloading the document');
-    }
-  };
-
-  const handlePreview = async (documentId: number, fileName: string) => {
-    try {
-      const response = await fetch(`${DOCUMENT_ENDPOINTS.PREVIEW_DOCUMENT}/${documentId}/preview`);
-      
-      if (response.ok) {
-        const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-          // Non-PDF file, show message
-          const data = await response.json();
-          alert(data.message || 'Preview not available for this file type');
-        } else {
-          // PDF file, open in new tab
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          window.open(url, '_blank');
-          // Clean up after a delay
-          setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-        }
-      } else {
-        alert('Failed to load preview');
-      }
-    } catch (error) {
-      console.error('Preview error:', error);
-      alert('An error occurred while loading the preview');
-    }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
 
   if (loading) {
     return (
@@ -190,63 +133,16 @@ const Documents = () => {
             <p className="text-gray-600 text-lg">No documents found in this category.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredDocuments.map((document) => (
-              <div
+              <DocumentCard
                 key={document.id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                      {document.category?.name || 'Без категории'}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {formatFileSize(document.file_size)}
-                    </span>
-                  </div>
-                  
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                    {document.title}
-                  </h3>
-                  
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {document.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-2xl font-bold text-blue-600">
-                        ${document.price}
-                      </span>
-                      {document.price === 0 && (
-                        <span className="text-green-600 text-sm font-medium">Free</span>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500">
-                        {document.buy_number} purchases
-                      </span>
-                      <div className="flex space-x-1">
-                        <button
-                          onClick={() => handleDownload(document.id, document.file_name)}
-                          className="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors"
-                          title="Download"
-                        >
-                          ↓
-                        </button>
-                                                 <button
-                           onClick={() => handlePreview(document.id, document.file_name)}
-                           className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-                         >
-                           Preview
-                         </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                document={document}
+                onViewDetails={(doc) => {
+                  // Navigate to document details or show modal
+                  navigate(`/documents/view/${doc.id}`);
+                }}
+              />
             ))}
           </div>
         )}

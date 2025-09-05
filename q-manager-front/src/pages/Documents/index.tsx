@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DOCUMENT_ENDPOINTS } from 'constants/endpoints';
+import DocumentCard from 'components/DocumentCard';
 
 interface Document {
   id: number;
@@ -279,63 +280,16 @@ const Documents = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredAndSortedDocuments.map((document) => (
-              <div
+              <DocumentCard
                 key={document.id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                      {document.category?.name || 'Без категории'}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {formatFileSize(document.file_size)}
-                    </span>
-                  </div>
-                  
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                    {document.title}
-                  </h3>
-                  
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {document.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-2xl font-bold text-blue-600">
-                        ${document.price}
-                      </span>
-                      {document.price === 0 && (
-                        <span className="text-green-600 text-sm font-medium">Free</span>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500">
-                        {document.buy_number} purchases
-                      </span>
-                      <div className="flex space-x-1">
-                        <button
-                          onClick={() => handleDownload(document.id, document.file_name)}
-                          className="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors"
-                          title="Download"
-                        >
-                          ↓
-                        </button>
-                        <button
-                          onClick={() => handlePreview(document.id, document.file_name)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-                        >
-                          Preview
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                document={document}
+                onViewDetails={(doc) => {
+                  // Navigate to document details or show modal
+                  navigate(`/documents/view/${doc.id}`);
+                }}
+              />
             ))}
           </div>
         )}

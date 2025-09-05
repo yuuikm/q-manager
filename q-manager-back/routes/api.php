@@ -43,6 +43,7 @@ Route::middleware(['token.auth', 'admin.auth'])->prefix('admin')->group(function
     Route::get('/documents', [AdminController::class, 'getDocuments']);
     Route::get('/documents/{id}', [AdminController::class, 'getDocument']);
     Route::put('/documents/{id}', [AdminController::class, 'updateDocument']);
+    Route::patch('/documents/{id}/toggle-status', [AdminController::class, 'toggleDocumentStatus']);
     Route::delete('/documents/{id}', [AdminController::class, 'deleteDocument']);
     
     // Category management
@@ -50,11 +51,13 @@ Route::middleware(['token.auth', 'admin.auth'])->prefix('admin')->group(function
     
     // News management
     Route::apiResource('news', NewsController::class);
+    Route::patch('/news/{id}/toggle-status', [NewsController::class, 'togglePublishStatus']);
     Route::post('/news/{id}/like', [NewsController::class, 'toggleLike']);
     Route::post('/news/{id}/comment', [NewsController::class, 'addComment']);
     
     // Course management
     Route::apiResource('courses', CourseController::class);
+    Route::patch('/courses/{id}/toggle-status', [CourseController::class, 'togglePublishStatus']);
     Route::get('/courses/{id}/materials', [CourseController::class, 'materials']);
     Route::get('/courses/{id}/tests', [CourseController::class, 'tests']);
     Route::get('/courses/{id}/enrollments', [CourseController::class, 'enrollments']);
