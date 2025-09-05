@@ -96,7 +96,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
               </div>
               <button 
                 onClick={handleLogout}
-                className="admin-button admin-button-secondary"
+                className="admin-button admin-button-secondary cursor-pointer"
               >
                 Logout
               </button>
@@ -106,7 +106,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 
         {/* Page Content */}
         <main className="main-content flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full">
             {children}
           </div>
         </main>

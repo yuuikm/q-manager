@@ -174,13 +174,13 @@ const DocumentList: FC = () => {
             </div>
             <button
               onClick={() => navigate('/admin/documents/upload')}
-              className="admin-button admin-button-primary"
+              className="admin-button admin-button-primary cursor-pointer"
             >
               Загрузить документ
             </button>
             <button
               onClick={() => navigate('/admin/documents/categories')}
-              className="admin-button admin-button-secondary"
+              className="admin-button admin-button-secondary cursor-pointer"
             >
               Управление категориями
             </button>

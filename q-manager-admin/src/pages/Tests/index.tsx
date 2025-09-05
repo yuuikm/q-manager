@@ -318,7 +318,7 @@ const Tests = () => {
           <h2 className="text-2xl font-semibold text-gray-800">Tests Management</h2>
           <button
             onClick={openModal}
-            className="admin-button admin-button-primary"
+            className="admin-button admin-button-primary cursor-pointer"
           >
             Create New Test
           </button>
@@ -594,7 +594,7 @@ const Tests = () => {
                     <button
                       type="button"
                       onClick={addQuestion}
-                      className="admin-button admin-button-primary"
+                      className="admin-button admin-button-primary cursor-pointer"
                     >
                       Add Question
                     </button>
@@ -772,13 +772,13 @@ const Tests = () => {
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="admin-button admin-button-secondary"
+                    className="admin-button admin-button-secondary cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="admin-button admin-button-primary"
+                    className="admin-button admin-button-primary cursor-pointer"
                   >
                     {editingTest ? 'Update Test' : 'Create Test'}
                   </button>

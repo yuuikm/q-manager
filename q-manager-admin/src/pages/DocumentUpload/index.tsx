@@ -232,7 +232,7 @@ const DocumentUpload: FC = () => {
         </div>
       )}
       
-      <div className="admin-card max-w-2xl">
+      <div className="admin-card w-full max-w-4xl">
         <Formik
           initialValues={{
             title: editMode && documentData ? documentData.title : '',
@@ -396,14 +396,14 @@ const DocumentUpload: FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/admin/documents')}
-                  className="admin-button admin-button-secondary"
+                  className="admin-button admin-button-secondary cursor-pointer"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || uploading}
-                  className="admin-button admin-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="admin-button admin-button-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? (editMode ? 'Обновление...' : 'Загрузка...') : (editMode ? 'Обновить документ' : 'Загрузить документ')}
                 </button>

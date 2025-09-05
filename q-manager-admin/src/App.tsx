@@ -15,6 +15,7 @@ import NewsList from 'pages/NewsList';
 import NewsCategories from 'pages/NewsCategories';
 import Tests from 'pages/Tests';
 import Layout from 'components/Layout';
+import './App.css';
 
 function App() {
   const dispatch = useAppDispatch();
