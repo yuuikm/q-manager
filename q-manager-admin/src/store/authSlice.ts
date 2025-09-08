@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { authAPI } from 'api/auth';
-import type { LoginCredentials, RegisterData, AuthResponse, User } from 'api/auth';
+import type { LoginCredentials, AuthResponse, User } from 'api/auth';
 
 interface AuthState {
   user: User | null;
@@ -32,18 +32,6 @@ export const login = createAsyncThunk(
   }
 );
 
-export const logout = createAsyncThunk(
-  'auth/logout',
-  async (_, { rejectWithValue }) => {
-    try {
-      await authAPI.logout();
-      localStorage.removeItem('auth_token');
-    } catch (error) {
-      localStorage.removeItem('auth_token');
-      return rejectWithValue(error instanceof Error ? error.message : 'Logout failed');
-    }
-  }
-);
 
 export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
@@ -93,12 +81,6 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-      })
-      .addCase(logout.fulfilled, (state) => {
-        state.user = null;
-        state.token = null;
-        state.isAuthenticated = false;
-        state.error = null;
       })
       .addCase(getCurrentUser.pending, (state) => {
         state.isLoading = true;

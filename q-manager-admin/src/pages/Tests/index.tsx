@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAppSelector } from 'store/hooks';
 import { useSearchParams } from 'react-router-dom';
 
 interface Question {
@@ -58,7 +57,6 @@ const Tests = () => {
     questions: [] as Question[],
   });
 
-  const { user } = useAppSelector((state: any) => state.auth);
   const [searchParams] = useSearchParams();
 
   useEffect(() => {

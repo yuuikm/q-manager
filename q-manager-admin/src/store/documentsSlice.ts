@@ -55,17 +55,6 @@ export const fetchDocuments = createAsyncThunk(
   }
 );
 
-export const fetchDocument = createAsyncThunk(
-  'documents/fetchOne',
-  async (id: number, { rejectWithValue }) => {
-    try {
-      const document = await adminAPI.getDocument(id);
-      return document;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch document');
-    }
-  }
-);
 
 export const updateDocument = createAsyncThunk(
   'documents/update',
@@ -145,19 +134,6 @@ const documentsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchDocuments.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-      .addCase(fetchDocument.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchDocument.fulfilled, (state, action: PayloadAction<Document>) => {
-        state.isLoading = false;
-        state.currentDocument = action.payload;
-        state.error = null;
-      })
-      .addCase(fetchDocument.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })

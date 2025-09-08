@@ -1,28 +1,36 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from 'store/hooks';
-import { checkAuth, getCurrentUser } from 'store/authSlice';
-import Login from 'pages/Login';
-import Dashboard from 'pages/Dashboard';
-import DocumentUpload from 'pages/DocumentUpload';
-import DocumentList from 'pages/DocumentList';
-import DocumentCategories from 'pages/DocumentCategories';
-import CourseUpload from 'pages/CourseUpload';
-import CourseList from 'pages/CourseList';
-import CourseCategories from 'pages/CourseCategories';
-import NewsUpload from 'pages/NewsUpload';
-import NewsList from 'pages/NewsList';
-import NewsCategories from 'pages/NewsCategories';
-import Tests from 'pages/Tests';
-import Layout from 'components/Layout';
-import './App.css';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "store/hooks";
+import { checkAuth, getCurrentUser } from "store/authSlice";
+import Login from "pages/Login";
+import Dashboard from "pages/Dashboard";
+import DocumentUpload from "pages/DocumentUpload";
+import DocumentList from "pages/DocumentList";
+import DocumentCategories from "pages/DocumentCategories";
+import CourseUpload from "pages/CourseUpload";
+import CourseList from "pages/CourseList";
+import CourseCategories from "pages/CourseCategories";
+import NewsUpload from "pages/NewsUpload";
+import NewsList from "pages/NewsList";
+import NewsCategories from "pages/NewsCategories";
+import Tests from "pages/Tests";
+import Layout from "components/Layout";
+import "./App.css";
+import { LINKS } from "constants/routes.ts";
 
 function App() {
   const dispatch = useAppDispatch();
-  const { isAuthenticated, user, isLoading } = useAppSelector((state: any) => state.auth);
+  const { isAuthenticated, user, isLoading } = useAppSelector(
+    (state: any) => state.auth,
+  );
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("auth_token");
     if (token) {
       dispatch(checkAuth());
       dispatch(getCurrentUser());
@@ -30,9 +38,9 @@ function App() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (isAuthenticated && user && user.role !== 'admin') {
-      localStorage.removeItem('auth_token');
-      window.location.href = '/';
+    if (isAuthenticated && user && user.role !== "admin") {
+      localStorage.removeItem("auth_token");
+      window.location.href = "/";
     }
   }, [isAuthenticated, user]);
 
@@ -47,7 +55,7 @@ function App() {
     );
   }
 
-  if (!isAuthenticated || !user || user.role !== 'admin') {
+  if (!isAuthenticated || !user || user.role !== "admin") {
     return (
       <Router>
         <Routes>
@@ -62,32 +70,30 @@ function App() {
     <Router>
       <Layout>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-
-          {/* Documents Routes */}
-          <Route path="/admin/documents" element={<DocumentList />} />
-          <Route path="/admin/documents/upload" element={<DocumentUpload />} />
-          <Route path="/admin/documents/categories" element={<DocumentCategories />} />
-
-          {/* Courses Routes */}
-          <Route path="/admin/courses" element={<CourseList />} />
-          <Route path="/admin/courses/upload" element={<CourseUpload />} />
-          <Route path="/admin/courses/categories" element={<CourseCategories />} />
-
-          {/* News Routes */}
-          <Route path="/admin/news" element={<NewsList />} />
-          <Route path="/admin/news/upload" element={<NewsUpload />} />
-          <Route path="/admin/news/categories" element={<NewsCategories />} />
-
-          {/* Legacy Routes (for backward compatibility) */}
-          <Route path="/documents" element={<DocumentList />} />
-          <Route path="/news" element={<NewsList />} />
-          <Route path="/courses" element={<CourseList />} />
-          <Route path="/tests" element={<Tests />} />
-          <Route path="/upload" element={<DocumentUpload />} />
-          
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path={LINKS.homeLink}
+            element={<Navigate to="/dashboard" replace />}
+          />
+          <Route path={LINKS.dashboardLink} element={<Dashboard />} />
+          <Route path={LINKS.documentsLink} element={<DocumentList />} />
+          <Route
+            path={LINKS.documentsUploadLink}
+            element={<DocumentUpload />}
+          />
+          <Route
+            path={LINKS.documentsCategoryLink}
+            element={<DocumentCategories />}
+          />
+          <Route path={LINKS.coursesLink} element={<CourseList />} />
+          <Route path={LINKS.coursesUploadLink} element={<CourseUpload />} />
+          <Route
+            path={LINKS.coursesCategoryLink}
+            element={<CourseCategories />}
+          />
+          <Route path={LINKS.newsLink} element={<NewsList />} />
+          <Route path={LINKS.newsUploadLink} element={<NewsUpload />} />
+          <Route path={LINKS.newsCategoryLink} element={<NewsCategories />} />
+          <Route path={LINKS.testsLink} element={<Tests />} />
         </Routes>
       </Layout>
     </Router>

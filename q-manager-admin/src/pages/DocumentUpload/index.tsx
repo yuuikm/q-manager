@@ -1,7 +1,7 @@
 import { type FC, useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { ADMIN_ENDPOINTS } from 'constants/endpoints';
 
 interface Category {
@@ -11,7 +11,6 @@ interface Category {
 
 const DocumentUpload: FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{

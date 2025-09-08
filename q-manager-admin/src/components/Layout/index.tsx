@@ -1,6 +1,7 @@
-import { type FC, ReactNode, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAppSelector } from 'store/hooks';
+import { type FC, ReactNode } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAppSelector } from "store/hooks";
+import { layoutMenuItems, type LayoutMenuItem } from "./config";
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,69 +10,45 @@ interface LayoutProps {
 const Layout: FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { user } = useAppSelector((state: any) => state.auth);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    window.location.href = '/login';
+    localStorage.removeItem("auth_token");
+    window.location.href = "/login";
   };
 
-  const isActive = (path: string) => {
-    if (path === '/admin/documents') {
-      return location.pathname.startsWith('/admin/documents');
-    }
-    if (path === '/admin/news') {
-      return location.pathname.startsWith('/admin/news');
-    }
-    if (path === '/admin/courses') {
-      return location.pathname.startsWith('/admin/courses');
-    }
-    return location.pathname === path;
+  const isActive = (item: LayoutMenuItem) => {
+    return item.isActive
+      ? item.isActive(location.pathname)
+      : location.pathname === item.path;
   };
 
   const getUserDisplayName = () => {
     if (user) {
       return `${user.first_name} ${user.last_name}`;
     }
-    return 'Admin';
+    return "Admin";
   };
-
-  const menuItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { path: '/admin/documents', label: 'Documents', icon: '📄' },
-    { path: '/admin/news', label: 'News', icon: '📰' },
-    { path: '/admin/courses', label: 'Courses', icon: '🎓' },
-    { path: '/tests', label: 'Tests', icon: '📝' },
-  ];
 
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <div className={`sidebar transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-16'}`}>
+      <div className="sidebar w-64">
         <div className="p-4">
-          <div className="flex items-center justify-between mb-8">
-            {sidebarOpen && (
-              <h1 className="text-xl font-bold text-white">Q-Manager Admin</h1>
-            )}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors"
-            >
-              {sidebarOpen ? '←' : '→'}
-            </button>
+          <div className="mb-8">
+            <h1 className="text-xl font-bold text-white">Q-Manager Admin</h1>
           </div>
-          
+
           <nav className="space-y-2">
-            {menuItems.map((item) => (
+            {layoutMenuItems.map((item: LayoutMenuItem) => (
               <Link
                 key={item.path}
                 to={item.path}
                 className={`sidebar-item flex items-center px-4 py-3 rounded-lg text-sm font-medium ${
-                  isActive(item.path) ? 'active' : ''
+                  isActive(item) ? "active" : ""
                 }`}
               >
                 <span className="text-lg mr-3">{item.icon}</span>
-                {sidebarOpen && <span>{item.label}</span>}
+                <span>{item.label}</span>
               </Link>
             ))}
           </nav>
@@ -85,16 +62,19 @@ const Layout: FC<LayoutProps> = ({ children }) => {
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-semibold text-gray-800">
-                {menuItems.find(item => isActive(item.path))?.label || 'Dashboard'}
+                {layoutMenuItems.find((item) => isActive(item))?.label ||
+                  "Dashboard"}
               </h2>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm text-gray-600">Welcome back,</p>
-                <p className="text-sm font-medium text-gray-800">{getUserDisplayName()}</p>
+                <p className="text-sm text-gray-600">Добро пожаловать,</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {getUserDisplayName()}
+                </p>
               </div>
-              <button 
+              <button
                 onClick={handleLogout}
                 className="admin-button admin-button-secondary cursor-pointer"
               >
@@ -106,9 +86,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 
         {/* Page Content */}
         <main className="main-content flex-1 p-6">
-          <div className="w-full">
-            {children}
-          </div>
+          <div className="w-full">{children}</div>
         </main>
       </div>
     </div>

@@ -93,25 +93,6 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getDocument(id: number): Promise<Document> {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      throw new Error('No token found');
-    }
-
-    const response = await fetch(`http://localhost:8000/api/admin/documents/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch document');
-    }
-
-    return response.json();
-  },
 
   async updateDocument(id: number, data: UpdateDocumentData): Promise<{ message: string; document: Document }> {
     const token = localStorage.getItem('auth_token');

@@ -5,12 +5,6 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface RegisterData {
-  username: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-}
 
 export interface User {
   id: number;
@@ -52,39 +46,7 @@ export const authAPI = {
     return response.json();
   },
 
-  async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await fetch('http://localhost:8000/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
 
-    if (!response.ok) {
-      const error: ApiError = await response.json();
-      throw new Error(error.message || 'Registration failed');
-    }
-
-    return response.json();
-  },
-
-  async logout(): Promise<void> {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
-
-    const response = await fetch('http://localhost:8000/api/auth/logout', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Logout failed');
-    }
-  },
 
   async getCurrentUser(): Promise<User> {
     const token = localStorage.getItem('auth_token');
