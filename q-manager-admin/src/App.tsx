@@ -3,8 +3,9 @@ import {
   Routes,
   Route,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "store/hooks";
 import { checkAuth, getCurrentUser } from "store/authSlice";
 import Login from "pages/Login";
@@ -19,32 +20,46 @@ import NewsUpload from "pages/NewsUpload";
 import NewsList from "pages/NewsList";
 import NewsCategories from "pages/NewsCategories";
 import Tests from "pages/Tests";
-import Layout from "components/Layout";
+import RouteWrapper from "components/RouteWrapper";
 import "./App.css";
 import { LINKS } from "constants/routes.ts";
 
-function App() {
+// Component that handles authentication logic with navigation
+function AppContent() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { isAuthenticated, user, isLoading } = useAppSelector(
     (state: any) => state.auth,
   );
+  
+  // Local state to track if we've completed initial auth check
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
     if (token) {
       dispatch(checkAuth());
-      dispatch(getCurrentUser());
+      dispatch(getCurrentUser()).catch((error) => {
+        console.error('Failed to get current user:', error);
+        localStorage.removeItem("auth_token");
+        navigate(LINKS.loginLink);
+      }).finally(() => {
+        setAuthChecked(true);
+      });
+    } else {
+      setAuthChecked(true);
     }
   }, [dispatch]);
 
   useEffect(() => {
     if (isAuthenticated && user && user.role !== "admin") {
       localStorage.removeItem("auth_token");
-      window.location.href = "/";
+      navigate(LINKS.loginLink);
     }
   }, [isAuthenticated, user]);
 
-  if (isLoading) {
+  // Show loading only during initial authentication check
+  if (!authChecked || (isLoading && localStorage.getItem("auth_token"))) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -55,47 +70,115 @@ function App() {
     );
   }
 
-  if (!isAuthenticated || !user || user.role !== "admin") {
-    return (
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
-    );
-  }
+  // Always render the same route structure to prevent re-renders
+  return (
+    <Routes>
+      <Route path={LINKS.loginLink} element={<Login />} />
+      <Route
+        path={LINKS.homeLink}
+        element={
+          <RouteWrapper>
+            <Navigate to={LINKS.dashboardLink} replace />
+          </RouteWrapper>
+        }
+      />
+      <Route 
+        path={LINKS.dashboardLink} 
+        element={
+          <RouteWrapper>
+            <Dashboard />
+          </RouteWrapper>
+        } 
+      />
+      <Route 
+        path={LINKS.documentsLink} 
+        element={
+          <RouteWrapper>
+            <DocumentList />
+          </RouteWrapper>
+        } 
+      />
+      <Route
+        path={LINKS.documentsUploadLink}
+        element={
+          <RouteWrapper>
+            <DocumentUpload />
+          </RouteWrapper>
+        }
+      />
+      <Route
+        path={LINKS.documentsCategoryLink}
+        element={
+          <RouteWrapper>
+            <DocumentCategories />
+          </RouteWrapper>
+        }
+      />
+      <Route 
+        path={LINKS.coursesLink} 
+        element={
+          <RouteWrapper>
+            <CourseList />
+          </RouteWrapper>
+        } 
+      />
+      <Route 
+        path={LINKS.coursesUploadLink} 
+        element={
+          <RouteWrapper>
+            <CourseUpload />
+          </RouteWrapper>
+        } 
+      />
+      <Route
+        path={LINKS.coursesCategoryLink}
+        element={
+          <RouteWrapper>
+            <CourseCategories />
+          </RouteWrapper>
+        }
+      />
+      <Route 
+        path={LINKS.newsLink} 
+        element={
+          <RouteWrapper>
+            <NewsList />
+          </RouteWrapper>
+        } 
+      />
+      <Route 
+        path={LINKS.newsUploadLink} 
+        element={
+          <RouteWrapper>
+            <NewsUpload />
+          </RouteWrapper>
+        } 
+      />
+      <Route 
+        path={LINKS.newsCategoryLink} 
+        element={
+          <RouteWrapper>
+            <NewsCategories />
+          </RouteWrapper>
+        } 
+      />
+      <Route 
+        path={LINKS.testsLink} 
+        element={
+          <RouteWrapper>
+            <Tests />
+          </RouteWrapper>
+        } 
+      />
+      <Route path="*" element={<Navigate to={LINKS.loginLink} replace />} />
+    </Routes>
+  );
+}
 
+function App() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route
-            path={LINKS.homeLink}
-            element={<Navigate to="/dashboard" replace />}
-          />
-          <Route path={LINKS.dashboardLink} element={<Dashboard />} />
-          <Route path={LINKS.documentsLink} element={<DocumentList />} />
-          <Route
-            path={LINKS.documentsUploadLink}
-            element={<DocumentUpload />}
-          />
-          <Route
-            path={LINKS.documentsCategoryLink}
-            element={<DocumentCategories />}
-          />
-          <Route path={LINKS.coursesLink} element={<CourseList />} />
-          <Route path={LINKS.coursesUploadLink} element={<CourseUpload />} />
-          <Route
-            path={LINKS.coursesCategoryLink}
-            element={<CourseCategories />}
-          />
-          <Route path={LINKS.newsLink} element={<NewsList />} />
-          <Route path={LINKS.newsUploadLink} element={<NewsUpload />} />
-          <Route path={LINKS.newsCategoryLink} element={<NewsCategories />} />
-          <Route path={LINKS.testsLink} element={<Tests />} />
-        </Routes>
-      </Layout>
+      <AppContent />
     </Router>
   );
 }

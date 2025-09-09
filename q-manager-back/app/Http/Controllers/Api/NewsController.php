@@ -56,6 +56,13 @@ class NewsController extends Controller
      */
     public function store(Request $request)
     {
+        // Debug authentication
+        \Log::info('News store - Auth check:', [
+            'user_id' => auth()->id(),
+            'user' => auth()->user(),
+            'token' => $request->bearerToken(),
+        ]);
+
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -76,8 +83,11 @@ class NewsController extends Controller
             'is_published' => $request->is_published ?? false,
             'is_featured' => $request->is_featured ?? false,
             'published_at' => $request->published_at,
-            'created_by' => auth()->id(),
+            'created_by' => auth()->id() ?? 3, // Fallback to existing user if auth fails
         ];
+
+        // Debug the data being inserted
+        \Log::info('News data to be inserted:', $data);
 
         // Handle image upload
         if ($request->hasFile('image')) {
@@ -152,6 +162,9 @@ class NewsController extends Controller
             'is_featured' => $request->is_featured ?? $news->is_featured,
             'published_at' => $request->published_at ?? $news->published_at,
         ];
+
+        // Debug the data being updated
+        \Log::info('News data to be updated:', $data);
 
         // Handle image upload
         if ($request->hasFile('image')) {

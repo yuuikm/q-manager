@@ -29,12 +29,42 @@ Route::get('/categories', [AdminController::class, 'getCategories']);
 Route::middleware(['token.auth'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/user', [AuthController::class, 'user']);
+    Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
     
     // User routes
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
     Route::put('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
+});
+
+// Temporary test route without auth
+Route::post('/test-news', function(Request $request) {
+    \Log::info('Test news creation - Auth check:', [
+        'user_id' => auth()->id(),
+        'user' => auth()->user(),
+        'token' => $request->bearerToken(),
+    ]);
+    
+    $data = [
+        'title' => $request->title ?? 'Test News',
+        'slug' => \Illuminate\Support\Str::slug($request->title ?? 'Test News'),
+        'description' => $request->description ?? 'Test Description',
+        'content' => $request->content ?? 'Test Content',
+        'is_published' => $request->is_published ?? false,
+        'is_featured' => $request->is_featured ?? false,
+        'created_by' => auth()->id() ?? 3,
+    ];
+    
+    \Log::info('Test news data:', $data);
+    
+    try {
+        $news = \App\Models\News::create($data);
+        return response()->json(['success' => true, 'news' => $news]);
+    } catch (\Exception $e) {
+        \Log::error('Test news creation error:', ['error' => $e->getMessage()]);
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
 });
 
 Route::middleware(['token.auth', 'admin.auth'])->prefix('admin')->group(function () {

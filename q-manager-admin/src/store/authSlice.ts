@@ -14,7 +14,7 @@ interface AuthState {
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem('auth_token'),
-  isAuthenticated: !!localStorage.getItem('auth_token'),
+  isAuthenticated: false, // Don't assume authentication until verified
   isLoading: false,
   error: null,
 };
@@ -40,7 +40,7 @@ export const getCurrentUser = createAsyncThunk(
       const user = await authAPI.getCurrentUser();
       return user;
     } catch (error) {
-      localStorage.removeItem('auth_token');
+      // Don't remove token here, let the component handle it
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to get user data');
     }
   }
@@ -57,11 +57,13 @@ const authSlice = createSlice({
       const token = localStorage.getItem('auth_token');
       if (token) {
         state.token = token;
-        state.isAuthenticated = true;
+        state.isLoading = true; // Set loading while checking
+        // Don't set isAuthenticated to true yet - wait for getCurrentUser
       } else {
         state.token = null;
         state.isAuthenticated = false;
         state.user = null;
+        state.isLoading = false;
       }
     },
   },

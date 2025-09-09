@@ -1,12 +1,11 @@
 import { type FC, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ADMIN_ENDPOINTS } from 'constants/endpoints';
 import { LINKS } from 'constants/routes';
 import FormController from '@/components/shared/FormController';
 import { 
-  documentFormFields, 
-  documentValidationSchema, 
-  getDocumentInitialValues 
+  newsFormFields, 
+  newsValidationSchema, 
+  getNewsInitialValues 
 } from './config';
 import { type FormField, type SelectOption } from '@/components/shared/FormController';
 
@@ -15,7 +14,7 @@ interface Category {
   name: string;
 }
 
-const DocumentUpload: FC = () => {
+const NewsUpload: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
@@ -27,7 +26,7 @@ const DocumentUpload: FC = () => {
   
   // Edit mode state
   const editMode = location.state?.editMode || false;
-  const documentData = location.state?.documentData || null;
+  const newsData = location.state?.newsData || null;
 
   useEffect(() => {
     fetchCategories();
@@ -36,10 +35,12 @@ const DocumentUpload: FC = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:8000/api/admin/document-categories', {
+      const response = await fetch('http://localhost:8000/api/admin/news-categories', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
         },
       });
 
@@ -65,9 +66,8 @@ const DocumentUpload: FC = () => {
       
       formData.append('title', values.title);
       formData.append('description', values.description);
-      formData.append('price', values.price.toString());
-      
-      // Find the selected category name
+      formData.append('content', values.content);
+      // Backend expects category name
       const selectedCategory = categories.find(cat => cat.id === Number(values.category_id));
       if (!selectedCategory) {
         setUploadStatus({ type: 'error', message: 'Пожалуйста, выберите категорию' });
@@ -75,18 +75,19 @@ const DocumentUpload: FC = () => {
         return;
       }
       formData.append('category', selectedCategory.name);
+      formData.append('is_published', values.is_published ? '1' : '0');
+      formData.append('is_featured', values.is_featured ? '1' : '0');
       
-      if (values.file) {
-        formData.append('file', values.file);
+      if (values.image) {
+        formData.append('image', values.image);
       }
 
       const url = editMode 
-        ? `${ADMIN_ENDPOINTS.UPDATE_DOCUMENT}/${documentData.id}`
-        : ADMIN_ENDPOINTS.UPLOAD_DOCUMENT;
+        ? `http://localhost:8000/api/admin/news/${newsData.id}`
+        : 'http://localhost:8000/api/admin/news';
       
-      // Use POST for both create and update, with _method field for updates
+      // Always POST; use _method for updates
       const method = 'POST';
-      
       if (editMode) {
         formData.append('_method', 'PUT');
       }
@@ -104,12 +105,12 @@ const DocumentUpload: FC = () => {
       if (response.ok) {
         setUploadStatus({
           type: 'success',
-          message: editMode ? 'Документ успешно обновлен' : 'Документ успешно загружен',
+          message: editMode ? 'Новость успешно обновлена' : 'Новость успешно создана',
         });
         
-        // Redirect to documents list after successful upload
+        // Redirect to news list after successful upload
         setTimeout(() => {
-          navigate(LINKS.documentsLink);
+          navigate(LINKS.newsLink);
         }, 2000);
       } else if (response.status === 401) {
         localStorage.removeItem('auth_token');
@@ -118,14 +119,14 @@ const DocumentUpload: FC = () => {
         const errorData = await response.json().catch(() => ({}));
         setUploadStatus({
           type: 'error',
-          message: errorData.message || 'Ошибка при загрузке документа',
+          message: errorData.message || 'Ошибка при создании новости',
         });
       }
     } catch (error) {
-      console.error('Ошибка загрузки документа:', error);
+      console.error('Ошибка создания новости:', error);
       setUploadStatus({
         type: 'error',
-        message: 'Произошла ошибка при загрузке документа',
+        message: 'Произошла ошибка при создании новости',
       });
     } finally {
       setUploading(false);
@@ -133,7 +134,7 @@ const DocumentUpload: FC = () => {
   };
 
   const handleCancel = () => {
-    navigate(LINKS.documentsLink);
+    navigate(LINKS.newsLink);
   };
 
   // Update category options in form fields
@@ -142,7 +143,7 @@ const DocumentUpload: FC = () => {
     label: cat.name,
   }));
 
-  const formFields: FormField[] = documentFormFields.map(field => {
+  const formFields: FormField[] = newsFormFields.map(field => {
     if (field.name === 'category_id') {
       return {
         ...field,
@@ -153,17 +154,17 @@ const DocumentUpload: FC = () => {
   });
 
   const formConfig = {
-    title: editMode ? 'Редактирование документа' : 'Загрузка документа',
+    title: editMode ? 'Редактирование новости' : 'Создание новости',
     description: editMode 
-      ? 'Измените данные документа' 
-      : 'Загрузите новый документ в систему',
+      ? 'Измените данные новости' 
+      : 'Создайте новую новость',
     fields: formFields,
-    submitButtonText: editMode ? 'Обновить документ' : 'Загрузить документ',
+    submitButtonText: editMode ? 'Обновить новость' : 'Создать новость',
     cancelButtonText: 'Отмена',
     onSubmit: handleSubmit,
     onCancel: handleCancel,
-    initialValues: getDocumentInitialValues(editMode, documentData),
-    validationSchema: documentValidationSchema,
+    initialValues: getNewsInitialValues(editMode, newsData),
+    validationSchema: newsValidationSchema,
     loading: uploading,
   };
 
@@ -186,4 +187,4 @@ const DocumentUpload: FC = () => {
   );
 };
 
-export default DocumentUpload;
+export default NewsUpload;

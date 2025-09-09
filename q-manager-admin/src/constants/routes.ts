@@ -1,5 +1,6 @@
 export const LINKS = {
   homeLink: '/',
+  loginLink: '/login',
   dashboardLink: '/dashboard',
   documentsLink: '/documents',
   documentsUploadLink: '/documents/upload',

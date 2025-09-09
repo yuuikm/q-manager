@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import DataTable from '@/components/shared/DataTable';
+import Button from '@/components/shared/Button';
+import Actions from '@/components/shared/Actions';
+import { type TableColumn, type TableAction } from '@/components/shared/DataTable';
 
 interface Question {
   question: string;
@@ -39,6 +43,34 @@ interface Course {
   title: string;
 }
 
+// Table columns configuration
+const testColumns: TableColumn[] = [
+  {
+    key: "test",
+    label: "Тест",
+  },
+  {
+    key: "course",
+    label: "Курс",
+  },
+  {
+    key: "settings",
+    label: "Настройки",
+  },
+  {
+    key: "status",
+    label: "Статус",
+  },
+];
+
+// Table actions configuration
+const testActions: TableAction[] = [
+  {
+    key: "actions",
+    label: "Действия",
+  },
+];
+
 const Tests = () => {
   const [tests, setTests] = useState<Test[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -68,11 +100,45 @@ const Tests = () => {
     if (courseParam) {
       setSelectedCourse(courseParam);
     }
+    
+    // Event listeners for actions
+    const handleEditTest = (event: CustomEvent) => {
+      handleEditTestAction(event.detail);
+    };
+    
+    const handleToggleTestStatus = (event: CustomEvent) => {
+      handleToggleTestStatusAction(event.detail.id, event.detail.currentStatus);
+    };
+    
+    const handleDuplicateTest = (event: CustomEvent) => {
+      handleDuplicateTestAction(event.detail);
+    };
+    
+    const handleDeleteTest = (event: CustomEvent) => {
+      handleDeleteTestAction(event.detail);
+    };
+
+    window.addEventListener('editTest', handleEditTest as EventListener);
+    window.addEventListener('toggleTestStatus', handleToggleTestStatus as EventListener);
+    window.addEventListener('duplicateTest', handleDuplicateTest as EventListener);
+    window.addEventListener('deleteTest', handleDeleteTest as EventListener);
+
+    return () => {
+      window.removeEventListener('editTest', handleEditTest as EventListener);
+      window.removeEventListener('toggleTestStatus', handleToggleTestStatus as EventListener);
+      window.removeEventListener('duplicateTest', handleDuplicateTest as EventListener);
+      window.removeEventListener('deleteTest', handleDeleteTest as EventListener);
+    };
   }, [searchParams]);
 
   const fetchTests = async () => {
     try {
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       let url = 'http://localhost:8000/api/admin/tests';
       
       // Add course filter if selected
@@ -90,6 +156,10 @@ const Tests = () => {
       if (response.ok) {
         const data = await response.json();
         setTests(data.data || data);
+      } else if (response.status === 401) {
+        // Handle unauthorized - token expired
+        localStorage.removeItem('auth_token');
+        navigate(LINKS.loginLink);
       }
     } catch (error) {
       console.error('Error fetching tests:', error);
@@ -101,6 +171,8 @@ const Tests = () => {
   const fetchCourses = async () => {
     try {
       const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
       const response = await fetch('http://localhost:8000/api/admin/courses', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -111,6 +183,10 @@ const Tests = () => {
       if (response.ok) {
         const data = await response.json();
         setCourses(data.data || data);
+      } else if (response.status === 401) {
+        // Handle unauthorized - token expired
+        localStorage.removeItem('auth_token');
+        navigate(LINKS.loginLink);
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -166,7 +242,7 @@ const Tests = () => {
     });
   };
 
-  const handleEdit = (test: Test) => {
+  const handleEditTestAction = (test: Test) => {
     setEditingTest(test);
     setFormData({
       title: test.title,
@@ -181,7 +257,7 @@ const Tests = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDeleteTestAction = async (id: number) => {
     if (!confirm('Вы уверены, что хотите удалить этот тест?')) return;
 
     try {
@@ -194,17 +270,24 @@ const Tests = () => {
       });
 
       if (response.ok) {
-        await fetchTests();
+        // Use functional update to avoid stale closure
+        setTests(prevTests => prevTests.filter(test => test.id !== id));
+        alert('Тест успешно удален');
+      } else if (response.status === 401) {
+        // Handle unauthorized - token expired
+        localStorage.removeItem('auth_token');
+        navigate(LINKS.loginLink);
       } else {
-        const error = await response.json();
-        alert(error.message || 'Ошибка удаления теста');
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.message || 'Ошибка удаления теста');
       }
     } catch (error) {
       console.error('Ошибка удаления теста:', error);
+      alert('Произошла ошибка при удалении теста');
     }
   };
 
-  const toggleTestStatus = async (id: number, currentStatus: boolean) => {
+  const handleToggleTestStatusAction = async (id: number, currentStatus: boolean) => {
     try {
       const token = localStorage.getItem('auth_token');
       const response = await fetch(`http://localhost:8000/api/admin/tests/${id}`, {
@@ -217,17 +300,28 @@ const Tests = () => {
       });
 
       if (response.ok) {
-        await fetchTests();
+        // Use functional update to avoid stale closure
+        setTests(prevTests => 
+          prevTests.map(test => 
+            test.id === id ? { ...test, is_active: !currentStatus } : test
+          )
+        );
+        alert(`Тест ${!currentStatus ? 'активирован' : 'деактивирован'} успешно`);
+      } else if (response.status === 401) {
+        // Handle unauthorized - token expired
+        localStorage.removeItem('auth_token');
+        navigate(LINKS.loginLink);
       } else {
-        const error = await response.json();
-        alert(error.message || 'Ошибка обновления статуса теста');
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.message || 'Ошибка обновления статуса теста');
       }
     } catch (error) {
       console.error('Ошибка обновления статуса теста:', error);
+      alert('Произошла ошибка при обновлении статуса теста');
     }
   };
 
-  const handleDuplicate = async (id: number) => {
+  const handleDuplicateTestAction = async (id: number) => {
     try {
       const token = localStorage.getItem('auth_token');
       const response = await fetch(`http://localhost:8000/api/admin/tests/${id}/duplicate`, {
@@ -238,10 +332,20 @@ const Tests = () => {
       });
 
       if (response.ok) {
+        // Refetch tests to get the new duplicated test
         await fetchTests();
+        alert('Тест успешно дублирован');
+      } else if (response.status === 401) {
+        // Handle unauthorized - token expired
+        localStorage.removeItem('auth_token');
+        navigate(LINKS.loginLink);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.message || 'Ошибка дублирования теста');
       }
     } catch (error) {
       console.error('Error duplicating test:', error);
+      alert('Произошла ошибка при дублировании теста');
     }
   };
 
@@ -314,12 +418,9 @@ const Tests = () => {
       <div className="admin-card">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">Tests Management</h2>
-          <button
-            onClick={openModal}
-            className="admin-button admin-button-primary cursor-pointer"
-          >
+          <Button onClick={openModal} variant="primary">
             Create New Test
-          </button>
+          </Button>
         </div>
 
         {/* Course Filter */}
@@ -356,128 +457,110 @@ const Tests = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Test
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Course
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Settings
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {tests.map((test) => (
-                <tr key={test.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900 mb-1">
-                        {test.title}
-                      </div>
-                      {test.description && (
-                        <div className="text-sm text-gray-500">
-                          {test.description}
-                        </div>
-                      )}
-                      <div className="text-xs text-gray-400 mt-1">
-                        {test.questions.length} questions • Created by {test.author.first_name} {test.author.last_name}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {test.course.title}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="space-y-1">
-                      <div>⏱️ {test.time_limit_minutes} min</div>
-                      <div>🎯 {test.passing_score}% pass</div>
-                      <div>🔄 {test.max_attempts} attempts</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        test.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {test.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                      {/* Edit Button */}
-                      <button
-                        onClick={() => handleEdit(test)}
-                        className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Редактировать тест"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
+        {/* Custom render functions for columns */}
+        {(() => {
+          const renderTestColumn = (test: Test) => (
+            <div>
+              <div className="text-sm font-medium text-gray-900 mb-1">
+                {test.title}
+              </div>
+              {test.description && (
+                <div className="text-sm text-gray-500">{test.description}</div>
+              )}
+              <div className="text-xs text-gray-400 mt-1">
+                {test.questions.length} вопросов • Создан{" "}
+                {test.author.first_name} {test.author.last_name}
+              </div>
+            </div>
+          );
 
-                      {/* Toggle Status Button */}
-                      <button
-                        onClick={() => toggleTestStatus(test.id, test.is_active)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          test.is_active 
-                            ? 'text-orange-600 hover:text-orange-900 hover:bg-orange-50' 
-                            : 'text-green-600 hover:text-green-900 hover:bg-green-50'
-                        }`}
-                        title={test.is_active ? 'Деактивировать тест' : 'Активировать тест'}
-                      >
-                        {test.is_active ? (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </button>
+          const renderCourseColumn = (test: Test) => (
+            <div className="text-sm text-gray-900">{test.course.title}</div>
+          );
 
-                      {/* Duplicate Button */}
-                      <button
-                        onClick={() => handleDuplicate(test.id)}
-                        className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Дублировать тест"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                      </button>
+          const renderSettingsColumn = (test: Test) => (
+            <div className="space-y-1">
+              <div>⏱️ {test.time_limit_minutes} мин</div>
+              <div>🎯 {test.passing_score}% проходной</div>
+              <div>🔄 {test.max_attempts} попыток</div>
+            </div>
+          );
 
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => handleDelete(test.id)}
-                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Удалить тест"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          const renderStatusColumn = (test: Test) => (
+            <span
+              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                test.is_active
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {test.is_active ? "Активен" : "Неактивен"}
+            </span>
+          );
+
+          const renderActionsColumn = (test: Test) => (
+            <Actions
+              onEdit={() => {
+                window.dispatchEvent(
+                  new CustomEvent("editTest", { detail: test }),
+                );
+              }}
+              onToggleStatus={() => {
+                window.dispatchEvent(
+                  new CustomEvent("toggleTestStatus", {
+                    detail: { id: test.id, currentStatus: test.is_active },
+                  }),
+                );
+              }}
+              onDuplicate={() => {
+                window.dispatchEvent(
+                  new CustomEvent("duplicateTest", { detail: test.id }),
+                );
+              }}
+              onDelete={() => {
+                window.dispatchEvent(
+                  new CustomEvent("deleteTest", { detail: test.id }),
+                );
+              }}
+              isActive={test.is_active}
+              editLabel="Редактировать тест"
+              deleteLabel="Удалить тест"
+              duplicateLabel="Дублировать тест"
+              showDuplicate={true}
+            />
+          );
+
+          // Enhanced columns with render functions
+          const enhancedColumns = testColumns.map(column => ({
+            ...column,
+            render: column.key === 'test' ? renderTestColumn :
+                    column.key === 'course' ? renderCourseColumn :
+                    column.key === 'settings' ? renderSettingsColumn :
+                    column.key === 'status' ? renderStatusColumn :
+                    undefined
+          }));
+
+          // Enhanced actions with render function
+          const enhancedActions = testActions.map(action => ({
+            ...action,
+            render: action.key === 'actions' ? renderActionsColumn : undefined
+          }));
+
+          return (
+            <DataTable
+              title=""
+              description=""
+              data={tests}
+              columns={enhancedColumns}
+              actions={enhancedActions}
+              loading={false}
+              error={null}
+              emptyMessage="Тесты не найдены"
+              emptyDescription="Создайте первый тест для начала работы"
+              totalCount={tests.length}
+            />
+          );
+        })()}
       </div>
 
       {/* Modal */}

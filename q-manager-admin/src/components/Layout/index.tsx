@@ -1,7 +1,8 @@
 import { type FC, ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAppSelector } from "store/hooks";
 import { layoutMenuItems, type LayoutMenuItem } from "./config";
+import { LINKS } from "constants/routes";
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,11 +10,12 @@ interface LayoutProps {
 
 const Layout: FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAppSelector((state: any) => state.auth);
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
-    window.location.href = "/login";
+    navigate(LINKS.loginLink);
   };
 
   const isActive = (item: LayoutMenuItem) => {
@@ -24,7 +26,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 
   const getUserDisplayName = () => {
     if (user) {
-      return `${user.first_name} ${user.last_name}`;
+      return `${user.username}`;
     }
     return "Admin";
   };
