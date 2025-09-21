@@ -80,7 +80,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
                 onClick={handleLogout}
                 className="admin-button admin-button-secondary cursor-pointer"
               >
-                Logout
+                Выйти
               </button>
             </div>
           </div>

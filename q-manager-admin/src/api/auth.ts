@@ -30,7 +30,7 @@ export interface ApiError {
 
 export const authAPI = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch('http://localhost:8000/api/auth/login', {
+    const response = await fetch(AUTH_ENDPOINTS.LOGIN, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ export const authAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch('http://localhost:8000/api/auth/user', {
+    const response = await fetch(AUTH_ENDPOINTS.USER, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

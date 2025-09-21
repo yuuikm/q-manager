@@ -12,6 +12,12 @@ class CourseEnrollment extends Model
     protected $fillable = [
         'course_id',
         'user_id',
+        'first_name',
+        'last_name',
+        'phone',
+        'email',
+        'company',
+        'notes',
         'status',
         'enrolled_at',
         'started_at',

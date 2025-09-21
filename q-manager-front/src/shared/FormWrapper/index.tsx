@@ -36,19 +36,36 @@ const FormWrapper: React.FC<FormProps> = ({
               >
                 {label}
               </label>
-              <Field
-                name={name}
-                type={type}
-                placeholder={placeholder}
-                className={`
-                  w-full px-4 py-3 border rounded-lg transition-all duration-200
-                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                  ${errors[name] && touched[name] 
-                    ? 'border-red-300 bg-red-50' 
-                    : 'border-gray-300 hover:border-gray-400'
-                  }
-                `}
-              />
+              {type === 'textarea' ? (
+                <Field
+                  name={name}
+                  as="textarea"
+                  rows={4}
+                  placeholder={placeholder}
+                  className={`
+                    w-full px-4 py-3 border rounded-lg transition-all duration-200 resize-vertical
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                    ${errors[name] && touched[name] 
+                      ? 'border-red-300 bg-red-50' 
+                      : 'border-gray-300 hover:border-gray-400'
+                    }
+                  `}
+                />
+              ) : (
+                <Field
+                  name={name}
+                  type={type}
+                  placeholder={placeholder}
+                  className={`
+                    w-full px-4 py-3 border rounded-lg transition-all duration-200
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                    ${errors[name] && touched[name] 
+                      ? 'border-red-300 bg-red-50' 
+                      : 'border-gray-300 hover:border-gray-400'
+                    }
+                  `}
+                />
+              )}
               <ErrorMessage 
                 name={name} 
                 component="div" 

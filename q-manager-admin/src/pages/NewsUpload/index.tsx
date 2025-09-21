@@ -1,6 +1,7 @@
 import { type FC, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LINKS } from 'constants/routes';
+import { ADMIN_ENDPOINTS } from '@/constants/endpoints';
 import FormController from '@/components/shared/FormController';
 import { 
   newsFormFields, 
@@ -35,7 +36,7 @@ const NewsUpload: FC = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:8000/api/admin/news-categories', {
+      const response = await fetch(ADMIN_ENDPOINTS.NEWS_CATEGORIES, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -67,14 +68,16 @@ const NewsUpload: FC = () => {
       formData.append('title', values.title);
       formData.append('description', values.description);
       formData.append('content', values.content);
-      // Backend expects category name
-      const selectedCategory = categories.find(cat => cat.id === Number(values.category_id));
-      if (!selectedCategory) {
-        setUploadStatus({ type: 'error', message: 'Пожалуйста, выберите категорию' });
+      
+      // Handle category - send the category name directly
+      const categoryName = values.category.trim();
+      if (!categoryName) {
+        setUploadStatus({ type: 'error', message: 'Введите название категории' });
         setUploading(false);
         return;
       }
-      formData.append('category', selectedCategory.name);
+      
+      formData.append('category', categoryName);
       formData.append('is_published', values.is_published ? '1' : '0');
       formData.append('is_featured', values.is_featured ? '1' : '0');
       
@@ -83,8 +86,8 @@ const NewsUpload: FC = () => {
       }
 
       const url = editMode 
-        ? `http://localhost:8000/api/admin/news/${newsData.id}`
-        : 'http://localhost:8000/api/admin/news';
+        ? `${ADMIN_ENDPOINTS.NEWS}/${newsData.id}`
+        : ADMIN_ENDPOINTS.NEWS;
       
       // Always POST; use _method for updates
       const method = 'POST';
@@ -139,12 +142,12 @@ const NewsUpload: FC = () => {
 
   // Update category options in form fields
   const categoryOptions: SelectOption[] = categories.map(cat => ({
-    value: cat.id,
+    value: cat.name,
     label: cat.name,
   }));
 
   const formFields: FormField[] = newsFormFields.map(field => {
-    if (field.name === 'category_id') {
+    if (field.name === 'category') {
       return {
         ...field,
         options: categoryOptions,

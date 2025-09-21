@@ -14,6 +14,9 @@ class Document extends Model
         'file_name',
         'file_type',
         'file_size',
+        'preview_file_path',
+        'preview_file_name',
+        'preview_file_size',
         'is_active',
         'created_by',
         'user_id',
@@ -25,6 +28,7 @@ class Document extends Model
         'price' => 'decimal:2',
         'is_active' => 'boolean',
         'file_size' => 'integer',
+        'preview_file_size' => 'integer',
         'buy_number' => 'integer',
     ];
 
@@ -58,5 +62,18 @@ class Document extends Model
     public function scopeByUser($query, $userId)
     {
         return $query->where('user_id', $userId);
+    }
+
+    public function purchases()
+    {
+        return $this->hasMany(DocumentPurchase::class);
+    }
+
+    public function isPurchasedBy($userId)
+    {
+        return $this->purchases()
+            ->where('user_id', $userId)
+            ->where('status', 'completed')
+            ->exists();
     }
 }

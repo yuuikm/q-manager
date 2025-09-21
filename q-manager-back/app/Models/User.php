@@ -55,7 +55,24 @@ class User extends Authenticatable
             'token' => hash('sha256', $token),
             'abilities' => ['*'],
             'last_used_at' => now(),
-            'expires_at' => now()->addDays(30),
+            'expires_at' => now()->addDays(7), // Reduced to 7 days for better security
+        ]);
+
+        return $token;
+    }
+
+    public function createRefreshToken(): string
+    {
+        $token = bin2hex(random_bytes(32));
+        
+        PersonalAccessToken::create([
+            'tokenable_type' => User::class,
+            'tokenable_id' => $this->id,
+            'name' => 'refresh_token',
+            'token' => hash('sha256', $token),
+            'abilities' => ['refresh'],
+            'last_used_at' => now(),
+            'expires_at' => now()->addDays(30), // Refresh tokens last longer
         ]);
 
         return $token;

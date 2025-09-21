@@ -107,4 +107,39 @@ class AuthController extends Controller
             'user' => $user
         ]);
     }
+
+    public function refreshToken(Request $request)
+    {
+        $refreshToken = $request->bearerToken();
+        
+        if (!$refreshToken) {
+            return response()->json(['message' => 'Refresh token required'], 401);
+        }
+
+        $personalAccessToken = \App\Models\PersonalAccessToken::where('token', hash('sha256', $refreshToken))
+            ->where('name', 'refresh_token')
+            ->first();
+
+        if (!$personalAccessToken || $personalAccessToken->expires_at->isPast()) {
+            return response()->json(['message' => 'Invalid or expired refresh token'], 401);
+        }
+
+        $user = $personalAccessToken->tokenable;
+        
+        // Create new access token
+        $newToken = $user->createToken();
+        
+        // Delete old refresh token
+        $personalAccessToken->delete();
+        
+        // Create new refresh token
+        $newRefreshToken = $user->createRefreshToken();
+
+        return response()->json([
+            'access_token' => $newToken,
+            'refresh_token' => $newRefreshToken,
+            'token_type' => 'Bearer',
+            'expires_in' => 7 * 24 * 60 * 60, // 7 days in seconds
+        ]);
+    }
 }

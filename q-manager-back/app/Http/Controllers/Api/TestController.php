@@ -7,6 +7,7 @@ use App\Models\Test;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class TestController extends Controller
 {
@@ -160,5 +161,148 @@ class TestController extends Controller
 
         $newTest->load(['course', 'author']);
         return response()->json($newTest, 201);
+    }
+
+    /**
+     * Parse Excel file and extract test questions
+     */
+    public function parseExcel(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:10240', // 10MB max
+            'course_id' => 'required|exists:courses,id',
+        ]);
+
+        try {
+            $file = $request->file('excel_file');
+            $courseId = $request->course_id;
+
+            // Load the Excel file
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $highestRow = $worksheet->getHighestRow();
+
+            $questions = [];
+            $currentQuestion = null;
+            $questionNumber = 0;
+
+            // Parse the Excel file row by row
+            for ($row = 1; $row <= $highestRow; $row++) {
+                $cellA = $worksheet->getCell('A' . $row)->getValue();
+                $cellB = $worksheet->getCell('B' . $row)->getValue();
+                $cellC = $worksheet->getCell('C' . $row)->getValue();
+
+                // Skip empty rows
+                if (empty($cellA) && empty($cellB) && empty($cellC)) {
+                    continue;
+                }
+
+                // Check if this is a question (usually starts with a number or contains question text)
+                if ($this->isQuestionRow($cellA, $cellB)) {
+                    // Save previous question if exists
+                    if ($currentQuestion) {
+                        $questions[] = $currentQuestion;
+                    }
+
+                    // Start new question
+                    $questionNumber++;
+                    $currentQuestion = [
+                        'question' => trim($cellA . ' ' . $cellB),
+                        'type' => 'single_choice', // Default type
+                        'options' => [],
+                        'correct_answer' => '',
+                        'points' => 1,
+                        'explanation' => null,
+                    ];
+                }
+                // Check if this is an answer option
+                elseif ($currentQuestion && $this->isAnswerRow($cellA, $cellB, $cellC)) {
+                    $answerText = trim($cellA . ' ' . $cellB . ' ' . $cellC);
+                    
+                    // Check if this is the correct answer (contains "(прав)")
+                    if (strpos($answerText, '(прав)') !== false) {
+                        // Remove the (прав) marker and set as correct answer
+                        $cleanAnswer = str_replace('(прав)', '', $answerText);
+                        $cleanAnswer = trim($cleanAnswer);
+                        $currentQuestion['correct_answer'] = $cleanAnswer;
+                        $currentQuestion['options'][] = $cleanAnswer;
+                    } else {
+                        $currentQuestion['options'][] = $answerText;
+                    }
+                }
+            }
+
+            // Add the last question
+            if ($currentQuestion) {
+                $questions[] = $currentQuestion;
+            }
+
+            // Validate that we have questions
+            if (empty($questions)) {
+                return response()->json([
+                    'message' => 'Не удалось найти вопросы в Excel файле. Убедитесь, что файл содержит вопросы и варианты ответов.'
+                ], 422);
+            }
+
+            // Get course information
+            $course = Course::findOrFail($courseId);
+
+            // Create test data structure
+            $testData = [
+                'title' => 'Тест из Excel - ' . $course->title,
+                'description' => 'Тест, созданный из Excel файла',
+                'course_id' => $courseId,
+                'time_limit_minutes' => 60,
+                'passing_score' => 70,
+                'max_attempts' => 3,
+                'is_active' => false, // Start as inactive for review
+                'questions' => $questions,
+            ];
+
+            return response()->json($testData);
+
+        } catch (\Exception $e) {
+            \Log::error('Excel parsing error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Ошибка при обработке Excel файла: ' . $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * Check if a row contains a question
+     */
+    private function isQuestionRow($cellA, $cellB)
+    {
+        $text = trim($cellA . ' ' . $cellB);
+        
+        // Check if it starts with a number followed by a dot or contains question keywords
+        if (preg_match('/^\d+\./', $text) || 
+            preg_match('/^\d+\)/', $text) ||
+            preg_match('/вопрос|question/i', $text) ||
+            (strlen($text) > 20 && !strpos($text, '(прав)'))) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if a row contains an answer option
+     */
+    private function isAnswerRow($cellA, $cellB, $cellC)
+    {
+        $text = trim($cellA . ' ' . $cellB . ' ' . $cellC);
+        
+        // Check if it looks like an answer option
+        if (preg_match('/^[а-яёa-z]\)/i', $text) || 
+            preg_match('/^[а-яёa-z]\./i', $text) ||
+            preg_match('/^\d+\)/', $text) ||
+            preg_match('/^\d+\./', $text) ||
+            strpos($text, '(прав)') !== false) {
+            return true;
+        }
+        
+        return false;
     }
 }

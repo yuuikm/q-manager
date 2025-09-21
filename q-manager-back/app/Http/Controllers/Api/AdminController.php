@@ -48,22 +48,47 @@ class AdminController extends Controller
 
     public function uploadDocument(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:500',
             'category' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',
-            'file' => 'required|file|mimes:pdf,doc,docx,txt,rtf|max:10240',
+            'file' => 'required|file|mimes:pdf,doc,docx,txt,rtf,jpg,jpeg,png,gif|max:10240',
+        ], [
+            'file.required' => 'Файл обязателен для загрузки',
+            'file.file' => 'Загруженный файл недействителен',
+            'file.mimes' => 'Файл должен быть одного из типов: pdf, doc, docx, txt, rtf, jpg, jpeg, png, gif',
+            'file.max' => 'Размер файла не должен превышать 10MB',
         ]);
 
         if ($validator->fails()) {
+            \Log::error('Document upload validation failed:', $validator->errors()->toArray());
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
         try {
             $file = $request->file('file');
+            
+            
+            if (!$file || !$file->isValid()) {
+                \Log::error('File upload failed:', [
+                    'has_file' => $request->hasFile('file'),
+                    'file_valid' => $file ? $file->isValid() : false,
+                    'upload_error' => $file ? $file->getError() : 'no file',
+                ]);
+                return response()->json(['message' => 'File upload failed'], 422);
+            }
+            
             $fileName = time() . '_' . $file->getClientOriginalName();
             $filePath = $file->storeAs('documents', $fileName, 'public');
+            
+            // Create preview file for PDFs (first 3 pages only)
+            $previewFilePath = null;
+            $previewFileName = null;
+            $previewFileSize = null;
+            
+            // Note: Preview file creation will be done after document creation
 
             // Handle category - find existing or create new
             $categoryName = $request->category;
@@ -85,10 +110,81 @@ class AdminController extends Controller
                 'file_name' => $file->getClientOriginalName(),
                 'file_type' => $file->getClientMimeType(),
                 'file_size' => $file->getSize(),
+                'preview_file_path' => null,
+                'preview_file_name' => null,
+                'preview_file_size' => null,
                 'created_by' => $request->user()->id,
                 'buy_number' => 0,
                 'category_id' => $category->id,
             ]);
+
+            // Create preview file for PDFs after document creation
+            if (strtolower($file->getClientOriginalExtension()) === 'pdf') {
+                $fullOriginalPath = storage_path('app/public/' . $filePath);
+                
+                if (file_exists($fullOriginalPath)) {
+                    // Create temporary file with ASCII name to avoid Cyrillic character issues
+                    $tempFileName = 'temp_doc_' . $document->id . '_' . time() . '.pdf';
+                    $tempFilePath = storage_path('app/public/documents/' . $tempFileName);
+                    
+                    // Copy original file to temp location
+                    if (copy($fullOriginalPath, $tempFilePath)) {
+                        $previewFileName = 'preview_doc_' . $document->id . '_' . time() . '.pdf';
+                        $previewFilePath = 'documents/' . $previewFileName;
+                        $fullPreviewPath = storage_path('app/public/' . $previewFilePath);
+                        
+                        // Use Ghostscript to extract first 3 pages
+                        $command = sprintf(
+                            'gs -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dFirstPage=1 -dLastPage=3 -sOutputFile=%s %s 2>/dev/null',
+                            escapeshellarg($fullPreviewPath),
+                            escapeshellarg($tempFilePath)
+                        );
+                        
+                        $output = [];
+                        $returnCode = 0;
+                        exec($command, $output, $returnCode);
+                        
+                        // Clean up temp file
+                        unlink($tempFilePath);
+                        
+                        if ($returnCode === 0 && file_exists($fullPreviewPath)) {
+                            $previewFileSize = filesize($fullPreviewPath);
+                            
+                            // Update document with preview file information
+                            $document->update([
+                                'preview_file_path' => $previewFilePath,
+                                'preview_file_name' => $previewFileName,
+                                'preview_file_size' => $previewFileSize,
+                            ]);
+                            
+                            \Log::info('Preview file created successfully', [
+                                'document_id' => $document->id,
+                                'original_file' => $fullOriginalPath,
+                                'preview_file' => $fullPreviewPath,
+                                'preview_size' => $previewFileSize
+                            ]);
+                        } else {
+                            \Log::error('Failed to create preview file', [
+                                'document_id' => $document->id,
+                                'command' => $command,
+                                'return_code' => $returnCode,
+                                'output' => $output
+                            ]);
+                        }
+                    } else {
+                        \Log::error('Failed to copy original file to temp location', [
+                            'document_id' => $document->id,
+                            'original_file' => $fullOriginalPath,
+                            'temp_file' => $tempFilePath
+                        ]);
+                    }
+                } else {
+                    \Log::error('Original file not found for preview creation', [
+                        'document_id' => $document->id,
+                        'file_path' => $fullOriginalPath
+                    ]);
+                }
+            }
 
             return response()->json([
                 'message' => 'Document uploaded successfully',
@@ -243,14 +339,13 @@ class AdminController extends Controller
     {
         $document = Document::findOrFail($id);
 
-        if (!$document->file_path) {
-            return response()->json(['message' => 'File not found'], 404);
-        }
-
-        $filePath = storage_path('app/public/' . $document->file_path);
+        // Use preview file if available, otherwise use main file
+        $filePath = $document->preview_file_path 
+            ? storage_path('app/public/' . $document->preview_file_path)
+            : storage_path('app/public/' . $document->file_path);
 
         if (!file_exists($filePath)) {
-            return response()->json(['message' => 'File not found on disk'], 404);
+            return response()->json(['message' => 'Preview file not found'], 404);
         }
 
         // Check if it's a PDF file
@@ -260,19 +355,40 @@ class AdminController extends Controller
             return response()->json(['message' => 'Preview is only available for PDF files'], 400);
         }
 
+        $fileName = $document->preview_file_name ?: $document->file_name;
+        
+        // Log preview access
+        \Log::info('Document preview accessed', [
+            'document_id' => $id,
+            'using_preview_file' => !is_null($document->preview_file_path),
+            'file_path' => $filePath,
+            'file_size' => filesize($filePath)
+        ]);
+
         // Return the PDF file for preview
         return response()->file($filePath, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $document->file_name . '"',
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
         ]);
     }
 
-    public function downloadDocument($id)
+    public function downloadDocument(Request $request, $id)
     {
         $document = Document::findOrFail($id);
 
         if (!$document->file_path) {
             return response()->json(['message' => 'File not found'], 404);
+        }
+
+        // Check if user is authenticated
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Authentication required'], 401);
+        }
+
+        // Check if document is free or user has purchased it
+        if ($document->price > 0 && !$document->isPurchasedBy($user->id)) {
+            return response()->json(['message' => 'Document must be purchased before download'], 403);
         }
 
         $filePath = storage_path('app/public/' . $document->file_path);
@@ -283,5 +399,85 @@ class AdminController extends Controller
 
         // Return the file for download
         return response()->download($filePath, $document->file_name);
+    }
+
+    public function purchaseDocument(Request $request, $id)
+    {
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'required|email|max:255',
+            'company' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        $document = Document::findOrFail($id);
+        $user = $request->user();
+
+        // Check if document is active
+        if (!$document->is_active) {
+            return response()->json(['message' => 'Document not available for purchase'], 404);
+        }
+
+        // Check if user already purchased this document (if authenticated)
+        if ($user && $document->isPurchasedBy($user->id)) {
+            return response()->json(['message' => 'Document already purchased'], 400);
+        }
+
+        // Create purchase record
+        $purchaseData = [
+            'document_id' => $document->id,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'company' => $request->company,
+            'notes' => $request->notes,
+            'price_paid' => $document->price,
+            'status' => 'completed',
+            'purchased_at' => now(),
+        ];
+
+        if ($user) {
+            $purchaseData['user_id'] = $user->id;
+            
+            // Update user profile with provided data
+            $user->update([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+            ]);
+        }
+
+        $purchase = \App\Models\DocumentPurchase::create($purchaseData);
+
+        // Update buy count
+        $document->increment('buy_number');
+
+        return response()->json([
+            'message' => 'Document purchased successfully',
+            'purchase' => $purchase
+        ]);
+    }
+
+    public function getUserPurchasedDocuments(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Authentication required'], 401);
+        }
+
+        $purchases = \App\Models\DocumentPurchase::with(['document.category'])
+            ->where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->orderBy('purchased_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'purchases' => $purchases,
+            'user' => $user
+        ]);
     }
 }

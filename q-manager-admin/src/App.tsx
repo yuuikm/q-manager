@@ -20,6 +20,7 @@ import NewsUpload from "pages/NewsUpload";
 import NewsList from "pages/NewsList";
 import NewsCategories from "pages/NewsCategories";
 import Tests from "pages/Tests";
+import Users from "pages/Users";
 import RouteWrapper from "components/RouteWrapper";
 import "./App.css";
 import { LINKS } from "constants/routes.ts";
@@ -167,6 +168,14 @@ function AppContent() {
         element={
           <RouteWrapper>
             <Tests />
+          </RouteWrapper>
+        } 
+      />
+      <Route 
+        path={LINKS.usersLink} 
+        element={
+          <RouteWrapper>
+            <Users />
           </RouteWrapper>
         } 
       />

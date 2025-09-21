@@ -5,6 +5,7 @@ import HeaderActions from '@/components/shared/HeaderActions';
 import { courseColumns, courseActions, getTypeLabel, formatPrice, formatDate } from './config';
 import Actions from '@/components/shared/Actions';
 import { LINKS } from '@/constants/routes';
+import { ADMIN_ENDPOINTS } from '@/constants/endpoints';
 
 interface Course {
   id: number;
@@ -84,7 +85,7 @@ const CourseList: FC = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/admin/courses', {
+      const response = await fetch(ADMIN_ENDPOINTS.COURSES, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -116,7 +117,7 @@ const CourseList: FC = () => {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/courses/${id}`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.COURSES}/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -144,7 +145,7 @@ const CourseList: FC = () => {
   const handleTogglePublishStatusAction = async (id: number, currentStatus: boolean) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/courses/${id}/toggle-status`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.TOGGLE_COURSE_STATUS}/${id}/toggle-status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

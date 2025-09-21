@@ -38,4 +38,10 @@ export const layoutMenuItems: LayoutMenuItem[] = [
     icon: '📝',
     isActive: (pathname: string) => pathname === LINKS.testsLink,
   },
+  {
+    path: LINKS.usersLink,
+    label: 'Пользователи',
+    icon: '👥',
+    isActive: (pathname: string) => pathname.startsWith(LINKS.usersLink),
+  },
 ];

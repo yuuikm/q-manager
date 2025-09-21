@@ -36,7 +36,7 @@ const DocumentUpload: FC = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:8000/api/admin/document-categories', {
+      const response = await fetch(ADMIN_ENDPOINTS.DOCUMENT_CATEGORIES, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -67,14 +67,15 @@ const DocumentUpload: FC = () => {
       formData.append('description', values.description);
       formData.append('price', values.price.toString());
       
-      // Find the selected category name
-      const selectedCategory = categories.find(cat => cat.id === Number(values.category_id));
-      if (!selectedCategory) {
-        setUploadStatus({ type: 'error', message: 'Пожалуйста, выберите категорию' });
+      // Handle category - send the category name directly
+      const categoryName = values.category.trim();
+      if (!categoryName) {
+        setUploadStatus({ type: 'error', message: 'Введите название категории' });
         setUploading(false);
         return;
       }
-      formData.append('category', selectedCategory.name);
+      
+      formData.append('category', categoryName);
       
       if (values.file) {
         formData.append('file', values.file);
@@ -90,6 +91,7 @@ const DocumentUpload: FC = () => {
       if (editMode) {
         formData.append('_method', 'PUT');
       }
+
 
       const response = await fetch(url, {
         method,
@@ -138,12 +140,12 @@ const DocumentUpload: FC = () => {
 
   // Update category options in form fields
   const categoryOptions: SelectOption[] = categories.map(cat => ({
-    value: cat.id,
+    value: cat.name,
     label: cat.name,
   }));
 
   const formFields: FormField[] = documentFormFields.map(field => {
-    if (field.name === 'category_id') {
+    if (field.name === 'category') {
       return {
         ...field,
         options: categoryOptions,

@@ -1,5 +1,6 @@
 import { type FC, useState, useEffect } from 'react';
 import { type FormikProps } from 'formik';
+import { ADMIN_ENDPOINTS } from '@/constants/endpoints';
 import Button from './Button';
 
 interface Material {
@@ -63,7 +64,7 @@ const MaterialsManager: FC<MaterialsManagerProps> = ({ form, courseId, editMode 
     try {
       const token = localStorage.getItem('auth_token');
       console.log('MaterialsManager: Fetching materials for course:', courseId);
-      const response = await fetch(`http://localhost:8000/api/admin/course-materials?course_id=${courseId}`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.COURSE_MATERIALS}?course_id=${courseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -160,8 +161,8 @@ const MaterialsManager: FC<MaterialsManagerProps> = ({ form, courseId, editMode 
       }
 
       const url = materialData.id 
-        ? `http://localhost:8000/api/admin/course-materials/${materialData.id}`
-        : 'http://localhost:8000/api/admin/course-materials';
+        ? `${ADMIN_ENDPOINTS.COURSE_MATERIALS}/${materialData.id}`
+        : ADMIN_ENDPOINTS.COURSE_MATERIALS;
       
       const method = materialData.id ? 'PUT' : 'POST';
 
@@ -200,7 +201,7 @@ const MaterialsManager: FC<MaterialsManagerProps> = ({ form, courseId, editMode 
     setLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/course-materials/${materialId}`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.COURSE_MATERIALS}/${materialId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

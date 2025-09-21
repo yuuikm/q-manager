@@ -12,8 +12,9 @@ export const documentValidationSchema = Yup.object({
   price: Yup.number()
     .required('Цена обязательна')
     .min(0, 'Цена не может быть отрицательной'),
-  category_id: Yup.number()
-    .required('Категория обязательна'),
+  category: Yup.string()
+    .required('Категория обязательна')
+    .min(2, 'Название категории должно содержать минимум 2 символа'),
   file: Yup.mixed().when('editMode', {
     is: true,
     then: (schema) => schema.nullable(),
@@ -66,10 +67,10 @@ export const documentFormFields: FormField[] = [
     step: 0.01,
   },
   {
-    name: 'category_id',
+    name: 'category',
     type: 'searchable-select',
     label: 'Категория',
-    placeholder: 'Выберите категорию',
+    placeholder: 'Введите название категории или выберите существующую',
     required: true,
     options: [], // Will be populated dynamically
   },
@@ -89,6 +90,6 @@ export const getDocumentInitialValues = (editMode: boolean, documentData: any) =
   title: editMode && documentData ? documentData.title : '',
   description: editMode && documentData ? documentData.description : '',
   price: editMode && documentData ? documentData.price : 0,
-  category_id: editMode && documentData ? documentData.category?.id : '',
+  category: editMode && documentData ? documentData.category?.name : '',
   file: null,
 });

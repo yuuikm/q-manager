@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ADMIN_ENDPOINTS } from '@/constants/endpoints';
 
 interface Category {
   id: number;
@@ -45,7 +46,7 @@ const CategorySelector = ({
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const endpoint = `http://localhost:8000/api/admin/${type}-categories`;
+      const endpoint = ADMIN_ENDPOINTS[`${type.toUpperCase()}_CATEGORIES` as keyof typeof ADMIN_ENDPOINTS];
       
       const response = await fetch(endpoint, {
         headers: {
@@ -70,7 +71,7 @@ const CategorySelector = ({
     
     try {
       const token = localStorage.getItem('auth_token');
-      const endpoint = `http://localhost:8000/api/admin/${type}-categories`;
+      const endpoint = ADMIN_ENDPOINTS[`${type.toUpperCase()}_CATEGORIES` as keyof typeof ADMIN_ENDPOINTS];
       
       const response = await fetch(endpoint, {
         method: 'POST',

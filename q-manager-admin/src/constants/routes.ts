@@ -12,4 +12,5 @@ export const LINKS = {
   newsUploadLink: '/news/upload',
   newsCategoryLink: '/news/categories',
   testsLink: '/tests',
+  usersLink: '/users',
 };

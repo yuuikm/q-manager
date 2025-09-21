@@ -12,7 +12,9 @@ export const newsValidationSchema = Yup.object({
   content: Yup.string()
     .required("Содержимое новости обязательно")
     .min(100, "Содержимое должно содержать минимум 100 символов"),
-  category_id: Yup.number().required("Категория обязательна"),
+  category: Yup.string()
+    .required("Категория обязательна")
+    .min(2, "Название категории должно содержать минимум 2 символа"),
   image: Yup.mixed().when("editMode", {
     is: true,
     then: (schema) => schema.nullable(),
@@ -67,10 +69,10 @@ export const newsFormFields: FormField[] = [
     rows: 10,
   },
   {
-    name: "category_id",
+    name: "category",
     type: "searchable-select",
     label: "Категория",
-    placeholder: "Выберите категорию",
+    placeholder: "Введите название категории или выберите существующую",
     required: true,
     options: [], // Will be populated dynamically
   },
@@ -99,7 +101,7 @@ export const getNewsInitialValues = (editMode: boolean, newsData: any) => ({
   title: editMode && newsData ? newsData.title : "",
   description: editMode && newsData ? newsData.description : "",
   content: editMode && newsData ? newsData.content : "",
-  category_id: editMode && newsData ? newsData.category?.id : "",
+  category: editMode && newsData ? newsData.category?.name : "",
   image: null,
   is_published: editMode && newsData ? newsData.is_published : false,
   is_featured: editMode && newsData ? newsData.is_featured : false,

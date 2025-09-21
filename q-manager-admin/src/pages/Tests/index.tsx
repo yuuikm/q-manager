@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { ADMIN_ENDPOINTS } from '@/constants/endpoints';
+import { LINKS } from '@/constants/routes';
 import DataTable from '@/components/shared/DataTable';
 import Button from '@/components/shared/Button';
 import Actions from '@/components/shared/Actions';
@@ -72,10 +74,12 @@ const testActions: TableAction[] = [
 ];
 
 const Tests = () => {
+  const navigate = useNavigate();
   const [tests, setTests] = useState<Test[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showExcelModal, setShowExcelModal] = useState(false);
   const [editingTest, setEditingTest] = useState<Test | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [formData, setFormData] = useState({
@@ -88,6 +92,17 @@ const Tests = () => {
     is_active: true,
     questions: [] as Question[],
   });
+
+  // Excel upload states
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [excelCourseId, setExcelCourseId] = useState<string>('');
+  const [parsingExcel, setParsingExcel] = useState(false);
+  const [parsedTest, setParsedTest] = useState<any>(null);
+  const [showExcelPreview, setShowExcelPreview] = useState(false);
+  const [excelStatus, setExcelStatus] = useState<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({ type: null, message: '' });
 
   const [searchParams] = useSearchParams();
 
@@ -139,7 +154,7 @@ const Tests = () => {
         return;
       }
 
-      let url = 'http://localhost:8000/api/admin/tests';
+      let url = ADMIN_ENDPOINTS.TESTS;
       
       // Add course filter if selected
       if (selectedCourse) {
@@ -173,7 +188,7 @@ const Tests = () => {
       const token = localStorage.getItem('auth_token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:8000/api/admin/courses', {
+      const response = await fetch(ADMIN_ENDPOINTS.COURSES, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -204,8 +219,8 @@ const Tests = () => {
     try {
       const token = localStorage.getItem('auth_token');
       const url = editingTest 
-        ? `http://localhost:8000/api/admin/tests/${editingTest.id}`
-        : 'http://localhost:8000/api/admin/tests';
+        ? `${ADMIN_ENDPOINTS.TESTS}/${editingTest.id}`
+        : ADMIN_ENDPOINTS.TESTS;
       
       const method = editingTest ? 'PUT' : 'POST';
       
@@ -262,7 +277,7 @@ const Tests = () => {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/tests/${id}`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.TESTS}/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -290,7 +305,7 @@ const Tests = () => {
   const handleToggleTestStatusAction = async (id: number, currentStatus: boolean) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/tests/${id}`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.TESTS}/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -324,7 +339,7 @@ const Tests = () => {
   const handleDuplicateTestAction = async (id: number) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/tests/${id}/duplicate`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.DUPLICATE_TEST}/${id}/duplicate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -403,6 +418,118 @@ const Tests = () => {
     setFormData({ ...formData, questions: updatedQuestions });
   };
 
+  // Excel upload functions
+  const handleExcelUpload = async () => {
+    if (!excelFile || !excelCourseId) {
+      setExcelStatus({ type: 'error', message: 'Выберите файл и курс' });
+      return;
+    }
+
+    setParsingExcel(true);
+    setExcelStatus({ type: null, message: '' });
+
+    try {
+      const formData = new FormData();
+      formData.append('excel_file', excelFile);
+      formData.append('course_id', excelCourseId);
+
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(ADMIN_ENDPOINTS.PARSE_TEST_EXCEL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setParsedTest(data);
+        setShowExcelPreview(true);
+        setExcelStatus({ 
+          type: 'success', 
+          message: `Успешно обработано ${data.questions.length} вопросов из Excel файла` 
+        });
+      } else if (response.status === 401) {
+        localStorage.removeItem('auth_token');
+        navigate(LINKS.loginLink);
+      } else {
+        const errorData = await response.json();
+        setExcelStatus({ 
+          type: 'error', 
+          message: errorData.message || 'Ошибка при обработке Excel файла' 
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing Excel file:', error);
+      setExcelStatus({ 
+        type: 'error', 
+        message: 'Произошла ошибка при обработке Excel файла' 
+      });
+    } finally {
+      setParsingExcel(false);
+    }
+  };
+
+  const handleExcelTestSave = async (testData: any) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(ADMIN_ENDPOINTS.TESTS, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(testData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setExcelStatus({ 
+          type: 'success', 
+          message: `Тест "${data.title}" успешно создан с ${data.questions.length} вопросами` 
+        });
+        
+        // Close modals and refresh tests
+        setShowExcelModal(false);
+        setShowExcelPreview(false);
+        setParsedTest(null);
+        setExcelFile(null);
+        setExcelCourseId('');
+        fetchTests();
+        
+        // Clear status after 3 seconds
+        setTimeout(() => {
+          setExcelStatus({ type: null, message: '' });
+        }, 3000);
+      } else if (response.status === 401) {
+        localStorage.removeItem('auth_token');
+        navigate(LINKS.loginLink);
+      } else {
+        const errorData = await response.json();
+        setExcelStatus({ 
+          type: 'error', 
+          message: errorData.message || 'Ошибка при создании теста' 
+        });
+      }
+    } catch (error) {
+      console.error('Error creating test:', error);
+      setExcelStatus({ 
+        type: 'error', 
+        message: 'Произошла ошибка при создании теста' 
+      });
+    }
+  };
+
+  const openExcelModal = () => {
+    setShowExcelModal(true);
+    setExcelFile(null);
+    setExcelCourseId('');
+    setExcelStatus({ type: null, message: '' });
+  };
+
   if (loading) {
     return (
       <div className="admin-card">
@@ -418,9 +545,14 @@ const Tests = () => {
       <div className="admin-card">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">Tests Management</h2>
-          <Button onClick={openModal} variant="primary">
-            Create New Test
-          </Button>
+          <div className="flex space-x-3">
+            <Button onClick={openExcelModal} variant="secondary">
+              Upload from Excel
+            </Button>
+            <Button onClick={openModal} variant="primary">
+              Create New Test
+            </Button>
+          </div>
         </div>
 
         {/* Course Filter */}
@@ -865,6 +997,201 @@ const Tests = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Excel Upload Modal */}
+      {showExcelModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-5 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Upload Test from Excel
+              </h3>
+              
+              {excelStatus.type && (
+                <div
+                  className={`mb-4 p-4 rounded-md ${
+                    excelStatus.type === 'success'
+                      ? 'bg-green-100 text-green-800 border border-green-200'
+                      : 'bg-red-100 text-red-800 border border-red-200'
+                  }`}
+                >
+                  {excelStatus.message}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Course *
+                  </label>
+                  <select
+                    value={excelCourseId}
+                    onChange={(e) => setExcelCourseId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a course</option>
+                    {courses.map(course => (
+                      <option key={course.id} value={course.id}>{course.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Excel File *
+                  </label>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Upload Excel file with test questions. Correct answers should be marked with (прав).
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowExcelModal(false)}
+                  className="admin-button admin-button-secondary cursor-pointer"
+                  disabled={parsingExcel}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExcelUpload}
+                  className="admin-button admin-button-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={parsingExcel || !excelFile || !excelCourseId}
+                >
+                  {parsingExcel ? 'Processing...' : 'Process Excel'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Excel Preview Modal */}
+      {showExcelPreview && parsedTest && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-5 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Test Preview - Review Before Saving
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Test Title</label>
+                    <input
+                      type="text"
+                      value={parsedTest.title}
+                      onChange={(e) => setParsedTest({...parsedTest, title: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+                    <select
+                      value={parsedTest.course_id}
+                      onChange={(e) => setParsedTest({...parsedTest, course_id: Number(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {courses.map(course => (
+                        <option key={course.id} value={course.id}>{course.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Time Limit (minutes)</label>
+                    <input
+                      type="number"
+                      value={parsedTest.time_limit_minutes}
+                      onChange={(e) => setParsedTest({...parsedTest, time_limit_minutes: Number(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Passing Score (%)</label>
+                    <input
+                      type="number"
+                      value={parsedTest.passing_score}
+                      onChange={(e) => setParsedTest({...parsedTest, passing_score: Number(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={parsedTest.description || ''}
+                    onChange={(e) => setParsedTest({...parsedTest, description: e.target.value})}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Questions ({parsedTest.questions.length})</h4>
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {parsedTest.questions.map((question: any, index: number) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="mb-2">
+                          <span className="text-sm font-medium text-gray-500">Question {index + 1}:</span>
+                          <p className="text-gray-900">{question.question}</p>
+                        </div>
+                        
+                        {question.options && question.options.length > 0 && (
+                          <div className="mb-2">
+                            <span className="text-sm font-medium text-gray-500">Answer Options:</span>
+                            <ul className="list-disc list-inside mt-1">
+                              {question.options.map((option: string, optIndex: number) => (
+                                <li key={optIndex} className={`text-sm ${
+                                  option === question.correct_answer ? 'text-green-600 font-semibold' : 'text-gray-700'
+                                }`}>
+                                  {option}
+                                  {option === question.correct_answer && ' ✓'}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        <div className="text-xs text-gray-500">
+                          Type: {question.type} | Points: {question.points}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowExcelPreview(false)}
+                    className="admin-button admin-button-secondary cursor-pointer"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleExcelTestSave(parsedTest)}
+                    className="admin-button admin-button-primary cursor-pointer"
+                  >
+                    Save Test
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

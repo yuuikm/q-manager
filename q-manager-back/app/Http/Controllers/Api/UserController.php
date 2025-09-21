@@ -64,6 +64,25 @@ class UserController extends Controller
     }
 
     /**
+     * Toggle admin status for a user
+     */
+    public function toggleAdmin(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        
+        $validated = $request->validate([
+            'role' => 'required|in:admin,subscriber',
+        ]);
+
+        $user->update(['role' => $validated['role']]);
+
+        return response()->json([
+            'message' => 'User role updated successfully',
+            'user' => $user,
+        ]);
+    }
+
+    /**
      * Remove the specified user
      */
     public function destroy($id)

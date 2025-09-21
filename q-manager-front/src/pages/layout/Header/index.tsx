@@ -1,12 +1,15 @@
 // libraries
-import { links } from 'constants/links';
 import { type FC, useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from 'store/hooks';
 import { logout, getCurrentUser, checkAuth } from 'store/authSlice';
+import { ROUTES } from 'constants/routes';
+import { MAIN_MENU, USER_MENU } from 'constants/menu';
 import Button from 'shared/Button';
 
 const Header: FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user, isAuthenticated, isLoading } = useAppSelector((state: any) => state.auth);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -46,7 +49,9 @@ const Header: FC = () => {
       <div className="container mx-auto px-4 py-3">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center w-full md:w-auto">
-            <div className="text-2xl font-bold text-blue-600">q-manager.kz</div>
+            <Link to={ROUTES.HOME} className="text-2xl font-bold text-blue-600 hover:text-blue-800 transition-colors">
+              q-manager.kz
+            </Link>
           </div>
 
           <div className="relative w-full md:w-1/2">
@@ -74,26 +79,28 @@ const Header: FC = () => {
           </div>
 
           <div className="flex items-center space-x-4 w-full md:w-auto justify-end">
-            <a
-              href="#"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition duration-300 flex items-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            {isAuthenticated && (
+              <Link
+                to={ROUTES.DOCUMENTS}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition duration-300 flex items-center"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Мои документы
-            </a>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Мои документы
+              </Link>
+            )}
             
             {isAuthenticated && user ? (
               <div className="relative" ref={dropdownRef}>
@@ -120,32 +127,16 @@ const Header: FC = () => {
                 
                 {showProfileDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <a
-                      href="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                    {USER_MENU.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setShowProfileDropdown(false)}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      Настройки
-                    </a>
+                        {item.label}
+                      </Link>
+                    ))}
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
@@ -170,34 +161,22 @@ const Header: FC = () => {
                 )}
               </div>
             ) : (
-              <Button text={'Войти'} type={'primary'} link={links.login} />
+              <Button text={'Войти'} type={'primary'} link={ROUTES.LOGIN} />
             )}
           </div>
         </div>
 
         <div className="hidden md:flex items-center justify-between mt-4">
           <div className="flex space-x-6">
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Главная
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Учебный центр
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Документация
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Семинары
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Помощь менеджеру
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Платная документация
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Контакты
-            </a>
+            {MAIN_MENU.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
         </div>
 

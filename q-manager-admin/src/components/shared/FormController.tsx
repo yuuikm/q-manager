@@ -43,6 +43,10 @@ export interface FormField {
   className?: string;
   customRender?: (field: FormField, formik: FormikProps<any>) => React.ReactNode;
   validation?: Yup.Schema<any>;
+  conditional?: {
+    field: string;
+    value: any;
+  };
 }
 
 // Form configuration
@@ -78,10 +82,16 @@ const SearchableSelect: FC<SearchableSelectProps> = ({
   showDropdown,
   onToggleDropdown,
 }) => {
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState(formik.values[field.name] || '');
+
+  // Sync search value with formik value
+  useEffect(() => {
+    setSearchValue(formik.values[field.name] || '');
+  }, [formik.values[field.name]]);
 
   const handleSearch = (value: string) => {
     setSearchValue(value);
+    formik.setFieldValue(field.name, value);
     onSearch(value);
   };
 
@@ -91,13 +101,11 @@ const SearchableSelect: FC<SearchableSelectProps> = ({
     onToggleDropdown();
   };
 
-  const selectedOption = options.find(opt => opt.value === formik.values[field.name]);
-
   return (
     <div className="relative">
       <input
         type="text"
-        value={searchValue || selectedOption?.label || ''}
+        value={searchValue}
         onChange={(e) => handleSearch(e.target.value)}
         onFocus={onToggleDropdown}
         placeholder={field.placeholder}
@@ -170,6 +178,16 @@ const FormController: FC<FormConfig> = ({
       ...prev,
       [fieldName]: !prev[fieldName]
     }));
+  };
+
+  // Helper function to check if field should be shown based on conditional logic
+  const shouldShowField = (field: FormField, formik: FormikProps<any>) => {
+    if (!field.conditional) return true;
+    
+    const { field: conditionalField, value: conditionalValue } = field.conditional;
+    const fieldValue = formik.values[conditionalField];
+    
+    return fieldValue === conditionalValue;
   };
 
   const renderField = (field: FormField, formik: FormikProps<any>) => {
@@ -325,24 +343,31 @@ const FormController: FC<FormConfig> = ({
 
           return (
           <Form className="space-y-6">
-            {fields.map((field) => (
-              <div key={field.name}>
-                {field.type !== 'checkbox' && (
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {field.label}
-                    {field.required && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-                )}
-                
-                {renderField(field, formik)}
-                
-                <ErrorMessage
-                  name={field.name}
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-            ))}
+            {fields.map((field) => {
+              // Skip rendering if field doesn't meet conditional requirements
+              if (!shouldShowField(field, formik)) {
+                return null;
+              }
+
+              return (
+                <div key={field.name}>
+                  {field.type !== 'checkbox' && (
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {field.label}
+                      {field.required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                  )}
+                  
+                  {renderField(field, formik)}
+                  
+                  <ErrorMessage
+                    name={field.name}
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
+                </div>
+              );
+            })}
 
             <div className="flex justify-end space-x-3 pt-4">
               {onCancel && (

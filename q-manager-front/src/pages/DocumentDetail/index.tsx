@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAppSelector } from 'store/hooks';
 import { DOCUMENT_ENDPOINTS } from 'constants/endpoints';
 
 interface Document {
@@ -30,15 +31,17 @@ const DocumentDetail = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [isPurchased, setIsPurchased] = useState(false);
+  const [isPurchased] = useState(false); // TODO: Implement proper purchase status check
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAppSelector((state: any) => state.auth);
 
   useEffect(() => {
     if (id) {
       fetchDocument();
     }
   }, [id]);
+
 
   const fetchDocument = async () => {
     try {
@@ -73,13 +76,17 @@ const DocumentDetail = () => {
     });
   };
 
-  const handlePurchase = () => {
-    // TODO: Implement actual payment processing
-    // For now, simulate a successful purchase
-    if (confirm(`Purchase "${document?.title}" for $${document?.price}?`)) {
-      setIsPurchased(true);
-      alert('Purchase successful! You can now download the full document.');
+  const handlePurchase = async () => {
+    if (!document) return;
+    
+    if (!isAuthenticated) {
+      // Show authentication modal for non-logged users
+      window.dispatchEvent(new CustomEvent('showAuthModal', { detail: { type: 'login' } }));
+      return;
     }
+    
+    // Navigate to checkout page for document purchase
+    navigate(`/checkout?type=document&id=${document.id}`);
   };
 
   const handlePreview = async () => {
@@ -97,12 +104,10 @@ const DocumentDetail = () => {
           const data = await response.json();
           alert(data.message || 'Preview not available for this file type');
         } else {
-          // PDF file, create blob URL for preview with page limit
+          // PDF file, create blob URL for preview
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
-          // Add page parameter to show only first 3 pages
-          const previewUrlWithPages = `${url}#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1-3&zoom=100`;
-          setPreviewUrl(previewUrlWithPages);
+          setPreviewUrl(url);
           setShowPreview(true);
         }
       } else {
@@ -134,7 +139,18 @@ const DocumentDetail = () => {
     }
     
     try {
-      const response = await fetch(`${DOCUMENT_ENDPOINTS.DOWNLOAD_DOCUMENT}/${document.id}/download`);
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {
+        'Accept': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${DOCUMENT_ENDPOINTS.DOWNLOAD_DOCUMENT}/${document.id}/download`, {
+        headers,
+      });
       
       if (response.ok) {
         // Create a blob from the response
@@ -152,7 +168,8 @@ const DocumentDetail = () => {
         window.URL.revokeObjectURL(url);
         window.document.body.removeChild(a);
       } else {
-        alert('Failed to download document');
+        const error = await response.json();
+        alert(error.message || 'Failed to download document');
       }
     } catch (error) {
       console.error('Download error:', error);
@@ -368,7 +385,7 @@ const DocumentDetail = () => {
              </div>
              <div className="flex-1 p-2 sm:p-4 overflow-hidden">
                <iframe
-                 src={previewUrl}
+                 src={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=100`}
                  className="w-full h-full border-0 rounded"
                  title="Document Preview"
                />

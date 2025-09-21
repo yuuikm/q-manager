@@ -21,8 +21,10 @@ class NewsController extends Controller
     {
         $query = News::with(['author', 'comments', 'likes', 'category']);
 
-        // Filter by published status
-        if ($request->has('published')) {
+        // For public access, only show published news by default
+        if (!$request->has('published')) {
+            $query->where('is_published', true);
+        } else {
             $query->where('is_published', $request->boolean('published'));
         }
 
@@ -126,7 +128,12 @@ class NewsController extends Controller
      */
     public function show(string $id)
     {
-        $news = News::with(['author', 'comments.user', 'likes', 'categories'])->findOrFail($id);
+        $news = News::with(['author', 'category'])->findOrFail($id);
+        
+        // Only show published news for public access
+        if (!$news->is_published) {
+            return response()->json(['message' => 'News not found'], 404);
+        }
         
         // Increment view count
         $news->increment('views_count');

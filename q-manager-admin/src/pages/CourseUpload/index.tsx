@@ -1,6 +1,7 @@
 import { type FC, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LINKS } from 'constants/routes';
+import { ADMIN_ENDPOINTS } from '@/constants/endpoints';
 import FormController from '@/components/shared/FormController';
 import MaterialsManager from '@/components/shared/MaterialsManager';
 import { 
@@ -49,7 +50,7 @@ const CourseUpload: FC = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:8000/api/admin/course-categories', {
+      const response = await fetch(ADMIN_ENDPOINTS.COURSE_CATEGORIES, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
@@ -126,8 +127,8 @@ const CourseUpload: FC = () => {
       }
 
       const url = editMode 
-        ? `http://localhost:8000/api/admin/courses/${courseData.id}`
-        : 'http://localhost:8000/api/admin/courses';
+        ? `${ADMIN_ENDPOINTS.COURSES}/${courseData.id}`
+        : ADMIN_ENDPOINTS.COURSES;
       
       // Use POST for both create and update, with _method field for updates
       const method = 'POST';
@@ -266,7 +267,7 @@ const CourseUpload: FC = () => {
           console.log(`${key}:`, value);
         }
 
-        const response = await fetch('http://localhost:8000/api/admin/course-materials', {
+        const response = await fetch(ADMIN_ENDPOINTS.COURSE_MATERIALS, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

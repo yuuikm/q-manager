@@ -33,8 +33,10 @@ class CourseController extends Controller
             });
         }
 
-        // Filter by published status
-        if ($request->has('published')) {
+        // For public access, only show published courses by default
+        if (!$request->has('published')) {
+            $query->where('is_published', true);
+        } else {
             $query->where('is_published', $request->boolean('published'));
         }
 
@@ -139,7 +141,12 @@ class CourseController extends Controller
      */
     public function show(string $id)
     {
-        $course = Course::with(['author', 'materials', 'tests', 'enrollments', 'categories'])->findOrFail($id);
+        $course = Course::with(['author', 'category'])->findOrFail($id);
+        
+        // Only show published courses for public access
+        if (!$course->is_published) {
+            return response()->json(['message' => 'Course not found'], 404);
+        }
         
         // Increment view count
         $course->increment('views_count');
@@ -254,6 +261,12 @@ class CourseController extends Controller
     public function materials(string $id)
     {
         $course = Course::findOrFail($id);
+        
+        // Only show materials for published courses for public access
+        if (!$course->is_published) {
+            return response()->json(['message' => 'Course not found'], 404);
+        }
+        
         $materials = $course->materials()->orderBy('sort_order')->get();
         return response()->json($materials);
     }
@@ -287,5 +300,71 @@ class CourseController extends Controller
             'message' => 'Course publish status updated successfully',
             'course' => $course->load(['author', 'category']),
         ]);
+    }
+
+    /**
+     * Enroll user in course
+     */
+    public function enroll(Request $request, string $id)
+    {
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'required|email|max:255',
+            'company' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        $course = Course::findOrFail($id);
+        
+        // Check if course is published
+        if (!$course->is_published) {
+            return response()->json(['message' => 'Course not available for enrollment'], 404);
+        }
+
+        // Get or create user
+        $user = $request->user();
+        if (!$user) {
+            // For non-authenticated users, we'll create a record but they need to register later
+            $user = null;
+        }
+
+        // Check if user is already enrolled
+        if ($user && $course->enrollments()->where('user_id', $user->id)->exists()) {
+            return response()->json(['message' => 'You are already enrolled in this course'], 400);
+        }
+
+        // Create enrollment
+        $enrollmentData = [
+            'course_id' => $course->id,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'company' => $request->company,
+            'notes' => $request->notes,
+            'status' => 'pending',
+            'enrolled_at' => now(),
+        ];
+
+        if ($user) {
+            $enrollmentData['user_id'] = $user->id;
+            
+            // Update user profile with provided data
+            $user->update([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+            ]);
+        }
+
+        $enrollment = $course->enrollments()->create($enrollmentData);
+
+        return response()->json([
+            'message' => 'Successfully enrolled in course',
+            'enrollment' => $enrollment,
+            'course' => $course->load(['author', 'category']),
+        ], 201);
     }
 }

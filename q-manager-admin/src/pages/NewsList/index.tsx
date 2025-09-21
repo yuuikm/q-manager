@@ -5,6 +5,7 @@ import HeaderActions from '@/components/shared/HeaderActions';
 import { newsColumns, newsActions, formatDate } from './config';
 import Actions from '@/components/shared/Actions';
 import { LINKS } from '@/constants/routes';
+import { ADMIN_ENDPOINTS } from '@/constants/endpoints';
 
 interface News {
   id: number;
@@ -76,7 +77,7 @@ const NewsList: FC = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/admin/news', {
+      const response = await fetch(ADMIN_ENDPOINTS.NEWS, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -108,7 +109,7 @@ const NewsList: FC = () => {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/news/${id}`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.NEWS}/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -136,7 +137,7 @@ const NewsList: FC = () => {
   const handleTogglePublishStatusAction = async (id: number, currentStatus: boolean) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/news/${id}/toggle-status`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.TOGGLE_NEWS_STATUS}/${id}/toggle-status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

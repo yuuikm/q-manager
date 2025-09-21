@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LINKS } from 'constants/routes';
+import { ADMIN_ENDPOINTS } from '@/constants/endpoints';
 
 interface Category {
   id: number;
@@ -27,7 +28,7 @@ const NewsCategories = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:8000/api/admin/news-categories', {
+      const response = await fetch(ADMIN_ENDPOINTS.NEWS_CATEGORIES, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -50,7 +51,7 @@ const NewsCategories = () => {
     
     try {
       const token = localStorage.getItem('auth_token');
-      const baseUrl = 'http://localhost:8000/api/admin/news-categories';
+      const baseUrl = ADMIN_ENDPOINTS.NEWS_CATEGORIES;
       const url = editingCategory 
         ? `${baseUrl}/${editingCategory.id}`
         : baseUrl;
@@ -92,7 +93,7 @@ const NewsCategories = () => {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:8000/api/admin/news-categories/${id}`, {
+      const response = await fetch(`${ADMIN_ENDPOINTS.NEWS_CATEGORIES}/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

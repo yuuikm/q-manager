@@ -52,7 +52,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch('http://localhost:8000/api/admin/documents', {
+    const response = await fetch(ADMIN_ENDPOINTS.UPLOAD_DOCUMENT, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -74,7 +74,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const url = new URL('http://localhost:8000/api/admin/documents');
+    const url = new URL(ADMIN_ENDPOINTS.GET_DOCUMENTS);
     if (params?.page) url.searchParams.append('page', params.page.toString());
     if (params?.category) url.searchParams.append('category', params.category);
     if (params?.search) url.searchParams.append('search', params.search);
@@ -100,7 +100,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch(`http://localhost:8000/api/admin/documents/${id}`, {
+    const response = await fetch(`${ADMIN_ENDPOINTS.UPDATE_DOCUMENT}/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -123,7 +123,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch(`http://localhost:8000/api/admin/documents/${id}`, {
+    const response = await fetch(`${ADMIN_ENDPOINTS.DELETE_DOCUMENT}/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -144,7 +144,7 @@ export const adminAPI = {
       throw new Error('No token found');
     }
 
-    const response = await fetch('http://localhost:8000/api/admin/categories', {
+    const response = await fetch(ADMIN_ENDPOINTS.CATEGORIES, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

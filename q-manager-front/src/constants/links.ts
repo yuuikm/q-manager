@@ -4,4 +4,8 @@ export const links = {
   register: '/register',
   documents: '/documents',
   document: '/document/:id',
+  news: '/news',
+  newsDetail: '/news/:id',
+  courses: '/courses',
+  courseDetail: '/courses/:id',
 }

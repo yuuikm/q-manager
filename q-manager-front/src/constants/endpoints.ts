@@ -19,10 +19,27 @@ export const DOCUMENT_ENDPOINTS = {
   GET_CATEGORIES: `${API_BASE_URL}/categories`,
   DOWNLOAD_DOCUMENT: `${API_BASE_URL}/documents`,
   PREVIEW_DOCUMENT: `${API_BASE_URL}/documents`,
+  PURCHASE_DOCUMENT: `${API_BASE_URL}/documents`,
+  USER_PURCHASED_DOCUMENTS: `${API_BASE_URL}/user/purchased-documents`,
+} as const;
+
+export const NEWS_ENDPOINTS = {
+  GET_NEWS: `${API_BASE_URL}/news`,
+  GET_NEWS_ITEM: `${API_BASE_URL}/news`,
+  GET_NEWS_CATEGORIES: `${API_BASE_URL}/news-categories`,
+} as const;
+
+export const COURSE_ENDPOINTS = {
+  GET_COURSES: `${API_BASE_URL}/courses`,
+  GET_COURSE: `${API_BASE_URL}/courses`,
+  GET_COURSE_CATEGORIES: `${API_BASE_URL}/course-categories`,
+  GET_COURSE_MATERIALS: `${API_BASE_URL}/courses`,
 } as const;
 
 export const API_ENDPOINTS = {
   PING: `${API_BASE_URL}/ping`,
   USERS: `${API_BASE_URL}/users`,
   ...DOCUMENT_ENDPOINTS,
+  ...NEWS_ENDPOINTS,
+  ...COURSE_ENDPOINTS,
 } as const;
