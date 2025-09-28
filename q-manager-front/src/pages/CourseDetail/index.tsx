@@ -14,6 +14,8 @@ const CourseDetail: FC = () => {
   const [materials, setMaterials] = useState<CourseMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [enrolled] = useState(false);
+  const [enrolling] = useState(false);
 
   useEffect(() => {
     const fetchCourse = async () => {

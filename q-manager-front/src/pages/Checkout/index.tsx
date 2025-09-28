@@ -107,8 +107,6 @@ const Checkout: FC = () => {
         throw new Error(errorData.message || 'Ошибка при оформлении заказа');
       }
 
-      const result = await response.json();
-      
       // Show success message and redirect to profile
       alert('Заказ успешно оформлен! Вы можете найти его в своем профиле.');
       navigate(ROUTES.PROFILE);

@@ -85,7 +85,7 @@ const Documents = () => {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading documents...</p>
+            <p className="mt-4 text-gray-600">Загрузка документов...</p>
           </div>
         </div>
       </section>
@@ -96,9 +96,9 @@ const Documents = () => {
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Documents</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Наши документы</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Explore our collection of high-quality documents across various categories
+            Изучите нашу коллекцию качественных документов по различным категориям
           </p>
         </div>
 
@@ -113,7 +113,7 @@ const Documents = () => {
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
             >
-              All Documents ({documents.length})
+              Все документы ({documents.length})
             </button>
             {categories.map((category) => (
               <button
@@ -130,7 +130,7 @@ const Documents = () => {
         {/* Documents Grid */}
         {filteredDocuments.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">No documents found in this category.</p>
+            <p className="text-gray-600 text-lg">В этой категории документы не найдены.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -153,7 +153,7 @@ const Documents = () => {
             onClick={() => navigate('/documents')}
             className="bg-blue-600 text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors"
           >
-            View All Documents
+            Все документы
           </button>
         </div>
       </div>

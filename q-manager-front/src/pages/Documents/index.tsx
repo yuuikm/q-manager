@@ -95,64 +95,6 @@ const Documents = () => {
     navigate(cat === 'all' ? '/documents' : `/documents/${cat.toLowerCase()}`);
   };
 
-  const handleDownload = async (documentId: number, fileName: string) => {
-    try {
-      const response = await fetch(`${DOCUMENT_ENDPOINTS.DOWNLOAD_DOCUMENT}/${documentId}/download`);
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = window.document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        window.document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        window.document.body.removeChild(a);
-      } else {
-        alert('Failed to download document');
-      }
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('An error occurred while downloading the document');
-    }
-  };
-
-  const handlePreview = async (documentId: number, fileName: string) => {
-    try {
-      const response = await fetch(`${DOCUMENT_ENDPOINTS.PREVIEW_DOCUMENT}/${documentId}/preview`);
-      
-      if (response.ok) {
-        const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-          // Non-PDF file, show message
-          const data = await response.json();
-          alert(data.message || 'Preview not available for this file type');
-        } else {
-          // PDF file, open in new tab
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          window.open(url, '_blank');
-          // Clean up after a delay
-          setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-        }
-      } else {
-        alert('Failed to load preview');
-      }
-    } catch (error) {
-      console.error('Preview error:', error);
-      alert('An error occurred while loading the preview');
-    }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
 
   if (loading) {
     return (
@@ -173,10 +115,10 @@ const Documents = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            {selectedCategory === 'all' ? 'All Documents' : `${selectedCategory} Documents`}
+            {selectedCategory === 'all' ? 'Все документы' : `Документы ${selectedCategory}`}
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover our comprehensive collection of documents and resources
+            Откройте для себя нашу полную коллекцию документов и ресурсов
           </p>
         </div>
 
@@ -185,10 +127,10 @@ const Documents = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Search */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Поиск</label>
               <input
                 type="text"
-                placeholder="Search documents..."
+                placeholder="Поиск документов..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -197,13 +139,13 @@ const Documents = () => {
 
             {/* Category Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Категория</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => handleCategoryClick(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">All Categories</option>
+                <option value="all">Все категории</option>
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
@@ -212,17 +154,17 @@ const Documents = () => {
 
             {/* Sort */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Сортировка</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="popular">Most Popular</option>
+                <option value="newest">Сначала новые</option>
+                <option value="oldest">Сначала старые</option>
+                <option value="price-low">Цена: от низкой к высокой</option>
+                <option value="price-high">Цена: от высокой к низкой</option>
+                <option value="popular">Самые популярные</option>
               </select>
             </div>
           </div>
@@ -239,7 +181,7 @@ const Documents = () => {
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
             >
-              All ({documents.length})
+              Все ({documents.length})
             </button>
             {categories.map((cat) => (
               <button
@@ -260,14 +202,14 @@ const Documents = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-gray-600">
-            Showing {filteredAndSortedDocuments.length} of {documents.length} documents
+            Показано {filteredAndSortedDocuments.length} из {documents.length} документов
           </p>
         </div>
 
         {/* Documents Grid */}
         {filteredAndSortedDocuments.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow-md">
-            <p className="text-gray-600 text-lg">No documents found matching your criteria.</p>
+            <p className="text-gray-600 text-lg">Документы, соответствующие вашим критериям, не найдены.</p>
             <button
               onClick={() => {
                 setSearchTerm('');
@@ -276,7 +218,7 @@ const Documents = () => {
               }}
               className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
             >
-              Clear Filters
+              Очистить фильтры
             </button>
           </div>
         ) : (

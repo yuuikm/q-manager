@@ -11,6 +11,12 @@ import NewsDetail from 'pages/NewsDetail';
 import Courses from 'pages/Courses';
 import CourseDetail from 'pages/CourseDetail';
 import Checkout from 'pages/Checkout';
+import About from 'pages/About';
+import Contact from 'pages/Contact';
+import DevelopmentConsultation from 'pages/Consultation/Development';
+import EFQMConsultation from 'pages/Consultation/EFQM';
+import ImprovementConsultation from 'pages/Consultation/Improvement';
+import AuditConsultation from 'pages/Consultation/Audit';
 
 function App() {
   return (
@@ -27,6 +33,12 @@ function App() {
       <Route path={ROUTES.COURSES} element={<Courses />} />
       <Route path={ROUTES.COURSE_DETAIL} element={<CourseDetail />} />
       <Route path={ROUTES.CHECKOUT} element={<Checkout />} />
+      <Route path={ROUTES.ABOUT_US} element={<About />} />
+      <Route path={ROUTES.CONTACT} element={<Contact />} />
+      <Route path={ROUTES.CONSULTATION_DEVELOPMENT} element={<DevelopmentConsultation />} />
+      <Route path={ROUTES.CONSULTATION_EFQM} element={<EFQMConsultation />} />
+      <Route path={ROUTES.CONSULTATION_IMPROVEMENT} element={<ImprovementConsultation />} />
+      <Route path={ROUTES.CONSULTATION_AUDIT} element={<AuditConsultation />} />
     </Routes>
   );
 }

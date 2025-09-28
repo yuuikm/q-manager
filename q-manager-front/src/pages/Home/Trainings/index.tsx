@@ -14,12 +14,12 @@ const Trainings: FC = () => {
           <p className="text-gray-700 mb-6">Обучение по модели EFQM-2025</p>
 
           <div className="flex flex-wrap gap-4 mb-6">
-            <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">Level 1 FOUNDATION</div>
+            <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">Уровень 1 ОСНОВЫ</div>
             <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">
-              Level 2 PRACTITIONER
+              Уровень 2 ПРАКТИК
             </div>
-            <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">Level 3 EXPERT</div>
-            <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">Level 4 MASTER</div>
+            <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">Уровень 3 ЭКСПЕРТ</div>
+            <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">Уровень 4 МАСТЕР</div>
           </div>
         </div>
 

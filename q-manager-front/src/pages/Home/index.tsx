@@ -1,6 +1,5 @@
 import Slider from "pages/Home/Slider";
 import Services from "pages/Home/Services";
-import Trainings from "pages/Home/Trainings";
 import Testimonials from "pages/Home/Testimonials";
 import Courses from "pages/Home/Courses";
 import News from "pages/Home/News";
@@ -15,7 +14,6 @@ function Home() {
     <>
       <Slider />
       <Services />
-      <Trainings />
       <Testimonials />
       <Courses />
       <News />

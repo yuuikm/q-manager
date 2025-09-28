@@ -15,11 +15,39 @@ export const MAIN_MENU: MenuItem[] = [
   },
   {
     label: 'Учебный центр',
-    path: ROUTES.COURSES,
+    path: '#',
+    children: [
+      {
+        label: 'Об учебном центре',
+        path: ROUTES.ABOUT_US,
+      },
+      {
+        label: 'Курсы',
+        path: ROUTES.COURSES,
+      },
+    ],
   },
   {
-    label: 'Документация',
-    path: ROUTES.DOCUMENTS,
+    label: 'Консультации',
+    path: '#',
+    children: [
+      {
+        label: 'Разработка и внедрение систем менеджмента',
+        path: ROUTES.CONSULTATION_DEVELOPMENT,
+      },
+      {
+        label: 'Внедрение Европейской Модели EFQM',
+        path: ROUTES.CONSULTATION_EFQM,
+      },
+      {
+        label: 'Улучшение систем менеджмента',
+        path: ROUTES.CONSULTATION_IMPROVEMENT,
+      },
+      {
+        label: 'Подготовка к сертификационному аудиту',
+        path: ROUTES.CONSULTATION_AUDIT,
+      },
+    ],
   },
   {
     label: 'Новости',
@@ -39,7 +67,7 @@ export const MAIN_MENU: MenuItem[] = [
   },
   {
     label: 'Контакты',
-    path: '#',
+    path: ROUTES.CONTACT,
   },
 ];
 

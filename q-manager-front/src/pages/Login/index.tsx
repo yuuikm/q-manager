@@ -11,7 +11,7 @@ import { login, clearError } from 'store/authSlice';
 const Login: FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { isAuthenticated, isLoading, error } = useAppSelector((state: any) => state.auth);
+  const { isAuthenticated, error } = useAppSelector((state: any) => state.auth);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {

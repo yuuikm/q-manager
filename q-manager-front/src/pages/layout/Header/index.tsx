@@ -1,6 +1,6 @@
 // libraries
 import { type FC, useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from 'store/hooks';
 import { logout, getCurrentUser, checkAuth } from 'store/authSlice';
 import { ROUTES } from 'constants/routes';
@@ -9,10 +9,11 @@ import Button from 'shared/Button';
 
 const Header: FC = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const { user, isAuthenticated, isLoading } = useAppSelector((state: any) => state.auth);
+  const { user, isAuthenticated } = useAppSelector((state: any) => state.auth);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showMenuDropdown, setShowMenuDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const menuDropdownRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -26,6 +27,21 @@ const Header: FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowProfileDropdown(false);
+      }
+      
+      // Check all menu dropdowns
+      const target = event.target as Node;
+      let clickedInsideAnyMenuDropdown = false;
+      
+      for (const [, ref] of menuDropdownRefs.current.entries()) {
+        if (ref && ref.contains(target)) {
+          clickedInsideAnyMenuDropdown = true;
+          break;
+        }
+      }
+      
+      if (!clickedInsideAnyMenuDropdown) {
+        setShowMenuDropdown(null);
       }
     };
 
@@ -169,13 +185,55 @@ const Header: FC = () => {
         <div className="hidden md:flex items-center justify-between mt-4">
           <div className="flex space-x-6">
             {MAIN_MENU.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="text-gray-700 hover:text-blue-600 transition-colors"
+              <div 
+                key={item.path} 
+                className="relative" 
+                ref={(el) => {
+                  if (item.children && el) {
+                    menuDropdownRefs.current.set(item.label, el);
+                  }
+                }}
               >
-                {item.label}
-              </Link>
+                {item.children ? (
+                  <>
+                    <button
+                      onClick={() => setShowMenuDropdown(showMenuDropdown === item.label ? null : item.label)}
+                      className="text-gray-700 hover:text-blue-600 transition-colors flex items-center"
+                    >
+                      {item.label}
+                      <svg
+                        className={`ml-1 h-4 w-4 transition-transform ${showMenuDropdown === item.label ? 'rotate-180' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {showMenuDropdown === item.label && (
+                      <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.path}
+                            to={child.path}
+                            onClick={() => setShowMenuDropdown(null)}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    to={item.path}
+                    className="text-gray-700 hover:text-blue-600 transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
         </div>

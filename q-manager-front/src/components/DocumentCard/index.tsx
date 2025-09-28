@@ -53,7 +53,7 @@ const DocumentCard: FC<DocumentCardProps> = ({ document, onViewDetails }) => {
 
   return (
     <div className="w-full max-w-sm mx-auto">
-      <div className={`${getCategoryColor(document.category?.id)} rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl`}>
+      <div className={`${getCategoryColor(document.category?.id ?? null)} rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl`}>
         {/* Header with Q-Manager.kz */}
         <div className="px-4 py-3 bg-black bg-opacity-25">
           <h3 className="text-white text-sm font-bold text-center tracking-wide">q-manager.kz</h3>

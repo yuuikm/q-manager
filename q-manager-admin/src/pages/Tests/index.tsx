@@ -212,7 +212,7 @@ const Tests = () => {
     e.preventDefault();
     
     if (formData.questions.length === 0) {
-      alert('Please add at least one question to the test.');
+      alert('Пожалуйста, добавьте хотя бы один вопрос к тесту.');
       return;
     }
 
@@ -701,7 +701,7 @@ const Tests = () => {
           <div className="relative top-5 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {editingTest ? 'Edit Test' : 'Create New Test'}
+                {editingTest ? 'Редактировать тест' : 'Создать новый тест'}
               </h3>
               
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -709,7 +709,7 @@ const Tests = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Test Title *
+                      Название теста *
                     </label>
                     <input
                       type="text"
@@ -722,7 +722,7 @@ const Tests = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Course *
+                      Курс *
                     </label>
                     <select
                       required
@@ -730,7 +730,7 @@ const Tests = () => {
                       onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">Select Course</option>
+                      <option value="">Выберите курс</option>
                       {courses.map((course) => (
                         <option key={course.id} value={course.id}>
                           {course.title}
@@ -742,7 +742,7 @@ const Tests = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
+                    Описание
                   </label>
                   <textarea
                     value={formData.description}
@@ -756,7 +756,7 @@ const Tests = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Time Limit (minutes) *
+                      Время выполнения (минуты) *
                     </label>
                     <input
                       type="number"
@@ -771,7 +771,7 @@ const Tests = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Passing Score (%) *
+                      Проходной балл (%) *
                     </label>
                     <input
                       type="number"
@@ -786,7 +786,7 @@ const Tests = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Max Attempts *
+                      Максимум попыток *
                     </label>
                     <input
                       type="number"
@@ -803,13 +803,13 @@ const Tests = () => {
                 {/* Questions Section */}
                 <div>
                   <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-lg font-medium text-gray-900">Questions ({formData.questions.length})</h4>
+                    <h4 className="text-lg font-medium text-gray-900">Вопросы ({formData.questions.length})</h4>
                     <button
                       type="button"
                       onClick={addQuestion}
                       className="admin-button admin-button-primary cursor-pointer"
                     >
-                      Add Question
+                      Добавить вопрос
                     </button>
                   </div>
 
@@ -817,20 +817,20 @@ const Tests = () => {
                     {formData.questions.map((question, questionIndex) => (
                       <div key={questionIndex} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex justify-between items-center mb-4">
-                          <h5 className="font-medium text-gray-900">Question {questionIndex + 1}</h5>
+                          <h5 className="font-medium text-gray-900">Вопрос {questionIndex + 1}</h5>
                           <button
                             type="button"
                             onClick={() => removeQuestion(questionIndex)}
                             className="text-red-600 hover:text-red-900"
                           >
-                            Remove
+                            Удалить
                           </button>
                         </div>
 
                         <div className="space-y-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Question Text *
+                              Текст вопроса *
                             </label>
                             <textarea
                               required
@@ -844,7 +844,7 @@ const Tests = () => {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Question Type *
+                                Тип вопроса *
                               </label>
                               <select
                                 required
@@ -852,16 +852,16 @@ const Tests = () => {
                                 onChange={(e) => updateQuestion(questionIndex, 'type', e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                               >
-                                <option value="single_choice">Single Choice</option>
-                                <option value="multiple_choice">Multiple Choice</option>
-                                <option value="true_false">True/False</option>
-                                <option value="text">Text Answer</option>
+                                <option value="single_choice">Один вариант</option>
+                                <option value="multiple_choice">Несколько вариантов</option>
+                                <option value="true_false">Верно/Неверно</option>
+                                <option value="text">Текстовый ответ</option>
                               </select>
                             </div>
 
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Points *
+                                Баллы *
                               </label>
                               <input
                                 type="number"
@@ -880,14 +880,14 @@ const Tests = () => {
                             <div>
                               <div className="flex justify-between items-center mb-2">
                                 <label className="block text-sm font-medium text-gray-700">
-                                  Options *
+                                  Варианты ответов *
                                 </label>
                                 <button
                                   type="button"
                                   onClick={() => addOption(questionIndex)}
                                   className="text-blue-600 hover:text-blue-900 text-sm"
                                 >
-                                  Add Option
+                                  Добавить вариант
                                 </button>
                               </div>
                               <div className="space-y-2">
@@ -899,7 +899,7 @@ const Tests = () => {
                                       value={option}
                                       onChange={(e) => updateOption(questionIndex, optionIndex, e.target.value)}
                                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                      placeholder={`Option ${optionIndex + 1}`}
+                                      placeholder={`Вариант ${optionIndex + 1}`}
                                     />
                                     <button
                                       type="button"
@@ -945,7 +945,7 @@ const Tests = () => {
                                 value={question.correct_answer}
                                 onChange={(e) => updateQuestion(questionIndex, 'correct_answer', e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder={question.type === 'text' ? 'Expected answer' : 'Correct option'}
+                                placeholder={question.type === 'text' ? 'Ожидаемый ответ' : 'Правильный вариант'}
                               />
                             </div>
                           )}
@@ -959,7 +959,7 @@ const Tests = () => {
                               onChange={(e) => updateQuestion(questionIndex, 'explanation', e.target.value)}
                               rows={2}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              placeholder="Explanation for the correct answer"
+                              placeholder="Объяснение правильного ответа"
                             />
                           </div>
                         </div>
@@ -977,7 +977,7 @@ const Tests = () => {
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
-                    Active
+                    Активен
                   </label>
                 </div>
 
@@ -987,13 +987,13 @@ const Tests = () => {
                     onClick={() => setShowModal(false)}
                     className="admin-button admin-button-secondary cursor-pointer"
                   >
-                    Cancel
+                    Отмена
                   </button>
                   <button
                     type="submit"
                     className="admin-button admin-button-primary cursor-pointer"
                   >
-                    {editingTest ? 'Update Test' : 'Create Test'}
+                    {editingTest ? 'Обновить тест' : 'Создать тест'}
                   </button>
                 </div>
               </form>
@@ -1008,7 +1008,7 @@ const Tests = () => {
           <div className="relative top-5 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Upload Test from Excel
+                Загрузить тест из Excel
               </h3>
               
               {excelStatus.type && (
@@ -1026,14 +1026,14 @@ const Tests = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Course *
+                    Курс *
                   </label>
                   <select
                     value={excelCourseId}
                     onChange={(e) => setExcelCourseId(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Select a course</option>
+                    <option value="">Выберите курс</option>
                     {courses.map(course => (
                       <option key={course.id} value={course.id}>{course.title}</option>
                     ))}
@@ -1042,7 +1042,7 @@ const Tests = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Excel File *
+                    Файл Excel *
                   </label>
                   <input
                     type="file"
@@ -1051,7 +1051,7 @@ const Tests = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Upload Excel file with test questions. Correct answers should be marked with (прав).
+                    Загрузите Excel файл с вопросами теста. Правильные ответы должны быть отмечены (прав).
                   </p>
                 </div>
               </div>
@@ -1063,7 +1063,7 @@ const Tests = () => {
                   className="admin-button admin-button-secondary cursor-pointer"
                   disabled={parsingExcel}
                 >
-                  Cancel
+                  Отмена
                 </button>
                 <button
                   type="button"
@@ -1071,7 +1071,7 @@ const Tests = () => {
                   className="admin-button admin-button-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={parsingExcel || !excelFile || !excelCourseId}
                 >
-                  {parsingExcel ? 'Processing...' : 'Process Excel'}
+                  {parsingExcel ? 'Обработка...' : 'Обработать Excel'}
                 </button>
               </div>
             </div>
@@ -1085,13 +1085,13 @@ const Tests = () => {
           <div className="relative top-5 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Test Preview - Review Before Saving
+                Предварительный просмотр теста - проверьте перед сохранением
               </h3>
               
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Test Title</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Название теста</label>
                     <input
                       type="text"
                       value={parsedTest.title}

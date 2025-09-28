@@ -21,6 +21,18 @@ export const ROUTES = {
   // Checkout
   CHECKOUT: '/checkout',
   
+  // About
+  ABOUT_US: '/about-us',
+  
+  // Contact
+  CONTACT: '/contact',
+  
+  // Consultation services
+  CONSULTATION_DEVELOPMENT: '/consultation/development',
+  CONSULTATION_EFQM: '/consultation/efqm',
+  CONSULTATION_IMPROVEMENT: '/consultation/improvement',
+  CONSULTATION_AUDIT: '/consultation/audit',
+  
   // Admin (if needed for frontend)
   ADMIN: '/admin',
 } as const;
