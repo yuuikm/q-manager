@@ -1,25 +1,26 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.node.json"
-    }
-  ],
-  "include": [
-    "src/api",
-    "src/assets",
-    "src/pages",
-    "src/store",
-    "src/shared",
-    "src/constants",
-    "src/components",
-    "src/styles",
-    "src/custom.d.ts"
-  ],
   "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
     "baseUrl": "src",
     "paths": {
       "api/*": [
@@ -44,5 +45,8 @@
         "styles/*"
       ]
     }
-  }
+  },
+  "include": [
+    "src"
+  ]
 }
